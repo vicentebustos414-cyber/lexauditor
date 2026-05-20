@@ -19,7 +19,13 @@ function App() {
   const [allRepos, setAllRepos] = useState(() => {
     try {
       const saved = localStorage.getItem('lexauditor_repos');
-      return saved ? JSON.parse(saved) : {};
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      }
+      return {};
     } catch (e) {
       console.warn("LocalStorage no disponible:", e);
       return {};
@@ -28,7 +34,9 @@ function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('lexauditor_repos', JSON.stringify(allRepos));
+      if (allRepos && typeof allRepos === 'object') {
+        localStorage.setItem('lexauditor_repos', JSON.stringify(allRepos));
+      }
     } catch (e) {
       console.error("Error guardando repositorios en localStorage:", e);
     }
@@ -42,9 +50,10 @@ function App() {
   const handleLogin = (identifier, isGuest) => {
     setCurrentUser(identifier);
     // Cada usuario inicia con un repositorio 100% vacío para garantizar absoluta privacidad y confidencialidad
-    if (!allRepos[identifier]) {
+    const safeRepos = allRepos && typeof allRepos === 'object' ? allRepos : {};
+    if (!safeRepos[identifier]) {
       setAllRepos(prev => ({ 
-        ...prev, 
+        ...(prev && typeof prev === 'object' ? prev : {}), 
         [identifier]: [] 
       }));
     }
@@ -91,10 +100,13 @@ function App() {
         contractType: type,
         data: data
       };
-      setAllRepos(prev => ({
-        ...prev,
-        [currentUser]: [newContract, ...(prev[currentUser] || [])]
-      }));
+      setAllRepos(prev => {
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return {
+          ...safePrev,
+          [currentUser]: [newContract, ...(safePrev[currentUser] || [])]
+        };
+      });
 
     } catch (err) {
       console.warn('Falló el backend seguro, usando simulación local integrada:', err);
@@ -125,10 +137,13 @@ function App() {
         contractType: type,
         data: finalData
       };
-      setAllRepos(prev => ({
-        ...prev,
-        [currentUser]: [newContract, ...(prev[currentUser] || [])]
-      }));
+      setAllRepos(prev => {
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return {
+          ...safePrev,
+          [currentUser]: [newContract, ...(safePrev[currentUser] || [])]
+        };
+      });
 
     } finally {
       setTimeout(() => {
@@ -187,14 +202,28 @@ function App() {
     else if (menuItem === 'Configuración') { setAppState('configuracion'); }
   };
 
-  const currentContracts = allRepos[currentUser] || [];
+  const currentContracts = (allRepos && typeof allRepos === 'object' && currentUser ? allRepos[currentUser] : []) || [];
 
   const deleteContract = (id) => {
-    setAllRepos(prev => ({ ...prev, [currentUser]: prev[currentUser].filter(c => c.id !== id) }));
+    setAllRepos(prev => {
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      const userContracts = safePrev[currentUser] || [];
+      return {
+        ...safePrev,
+        [currentUser]: userContracts.filter(c => c.id !== id)
+      };
+    });
   };
   
   const addContract = (newContract) => {
-    setAllRepos(prev => ({ ...prev, [currentUser]: [{ ...newContract, id: Date.now() }, ...(prev[currentUser] || [])] }));
+    setAllRepos(prev => {
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      const userContracts = safePrev[currentUser] || [];
+      return {
+        ...safePrev,
+        [currentUser]: [{ ...newContract, id: Date.now() }, ...userContracts]
+      };
+    });
   };
 
   if (appState === 'login') return <LoginScreen onLoginSuccess={handleLogin} />;
