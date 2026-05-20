@@ -126,28 +126,42 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
               </form>
             )}
 
-            {sections.map((section, idx) => (
-              <div key={idx} style={{ marginBottom: '40px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                  <h3 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem', fontWeight: 600 }}>{section}</h3>
-                  <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(234, 179, 8, 0.3), transparent)' }}></div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                  {savedContracts.filter(c => c.section === section).map((doc) => (
-                    <div key={doc.id} className="premium-card" style={{ position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', top: 0, right: 0, padding: '8px 12px', background: doc.status === 'Seguro' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: doc.status === 'Seguro' ? 'var(--success-green)' : 'var(--alert-red)', fontSize: '0.7rem', fontWeight: 800, borderRadius: '0 0 0 12px', textTransform: 'uppercase' }}>{doc.status}</div>
-                      <FileText size={40} color="var(--text-secondary)" style={{ marginBottom: '15px', opacity: 0.5 }} />
-                      <h4 style={{ color: 'white', marginBottom: '5px', fontSize: '1.05rem' }}>{doc.name}</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>Modificado: {doc.date}</p>
-                      <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={() => onOpenContract(doc)} style={{ flex: 1, background: 'rgba(14, 165, 233, 0.1)', border: '1px solid var(--accent-teal)', color: 'var(--accent-teal)', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontWeight: 600 }}><ExternalLink size={14} /> Abrir</button>
-                        <button onClick={() => onDeleteContract(doc.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: 'var(--alert-red)', padding: '8px', borderRadius: '6px', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                      </div>
-                    </div>
-                  ))}
+            {savedContracts.length === 0 ? (
+              <div className="glass-panel" style={{ textAlign: 'center', padding: '50px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>
+                <FolderOpen size={48} color="var(--text-secondary)" style={{ marginBottom: '20px', opacity: 0.3 }} />
+                <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '1.2rem' }}>Tu Repositorio está Vacío</h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 20px', lineHeight: '1.6' }}>
+                  No hay contratos registrados en tu cuenta. Sube un documento en "Nueva Auditoría" para iniciar el análisis legal e IA.
+                </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 15px', background: 'rgba(16, 185, 129, 0.04)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)', fontSize: '0.8rem', color: 'var(--success-green)' }}>
+                  <span>🔒</span>
+                  <span><strong>Privacidad al 100%:</strong> Tus archivos se analizan en memoria de tu navegador y no se guardan en servidores públicos ni bases de datos externas.</span>
                 </div>
               </div>
-            ))}
+            ) : (
+              sections.map((section, idx) => (
+                <div key={idx} style={{ marginBottom: '40px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                    <h3 style={{ color: 'var(--accent-gold)', fontSize: '1.2rem', fontWeight: 600 }}>{section}</h3>
+                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(234, 179, 8, 0.3), transparent)' }}></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                    {savedContracts.filter(c => c.section === section).map((doc) => (
+                      <div key={doc.id} className="premium-card" style={{ position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: 0, right: 0, padding: '8px 12px', background: doc.status === 'Seguro' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: doc.status === 'Seguro' ? 'var(--success-green)' : 'var(--alert-red)', fontSize: '0.7rem', fontWeight: 800, borderRadius: '0 0 0 12px', textTransform: 'uppercase' }}>{doc.status}</div>
+                        <FileText size={40} color="var(--text-secondary)" style={{ marginBottom: '15px', opacity: 0.5 }} />
+                        <h4 style={{ color: 'white', marginBottom: '5px', fontSize: '1.05rem' }}>{doc.name}</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>Modificado: {doc.date}</p>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <button onClick={() => onOpenContract(doc)} style={{ flex: 1, background: 'rgba(14, 165, 233, 0.1)', border: '1px solid var(--accent-teal)', color: 'var(--accent-teal)', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontWeight: 600 }}><ExternalLink size={14} /> Abrir</button>
+                          <button onClick={() => onDeleteContract(doc.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: 'var(--alert-red)', padding: '8px', borderRadius: '6px', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 

@@ -140,6 +140,11 @@ const UploadScreen = ({ onUpload }) => {
           >
             Iniciar Auditoría IA <ChevronRight size={18} />
           </button>
+
+          <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 15px', background: 'rgba(16, 185, 129, 0.04)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)', fontSize: '0.8rem', color: 'var(--success-green)', lineHeight: '1.4' }}>
+            <span>🔒</span>
+            <span><strong>Privacidad Garantizada:</strong> Los documentos se analizan en memoria de forma temporal y se destruyen de inmediato. No guardamos tus archivos en el servidor.</span>
+          </div>
         </div>
       </div>
     </div>

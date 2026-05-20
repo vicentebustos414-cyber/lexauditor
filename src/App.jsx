@@ -26,14 +26,11 @@ function App() {
 
   const handleLogin = (identifier, isGuest) => {
     setCurrentUser(identifier);
-    // Si el usuario es nuevo (o invitado), le creamos un repositorio predeterminado para que tenga algo que ver
+    // Cada usuario inicia con un repositorio 100% vacío para garantizar absoluta privacidad y confidencialidad
     if (!allRepos[identifier]) {
       setAllRepos(prev => ({ 
         ...prev, 
-        [identifier]: isGuest ? [
-          { id: 901, name: 'Demo_Arriendo_Local.pdf', date: new Date().toLocaleDateString('es-CL'), section: 'Demo Comercial', status: 'Seguro' },
-          { id: 902, name: 'Demo_Contrato_Trabajo.docx', date: new Date().toLocaleDateString('es-CL'), section: 'Demo Laboral', status: 'Alerta' }
-        ] : [] 
+        [identifier]: [] 
       }));
     }
     setAppState('upload');
