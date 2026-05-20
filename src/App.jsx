@@ -140,7 +140,16 @@ function App() {
 
 
   const handleApplyAmendment = (alertId) => {
-    setContractData(prev => ({ ...prev, [alertId]: { ...prev[alertId], isFixed: true } }));
+    setContractData(prev => {
+      if (!prev) return prev;
+      if (prev.findings && Array.isArray(prev.findings)) {
+        return {
+          ...prev,
+          findings: prev.findings.map(f => f.id === alertId ? { ...f, isFixed: true } : f)
+        };
+      }
+      return { ...prev, [alertId]: { ...prev[alertId], isFixed: true } };
+    });
     setActiveAlert(null); 
   };
 
@@ -174,7 +183,6 @@ function App() {
     } 
     else if (menuItem === 'Mis Contratos') { setAppState('mis_contratos'); } 
     else if (menuItem === 'Base Jurisprudencial') { setAppState('base_jurisprudencial'); } 
-    else if (menuItem === 'Simulador de Juicios') { setAppState('simulador_juicios'); } 
     else if (menuItem === 'Configuración') { setAppState('configuracion'); }
   };
 
@@ -200,20 +208,29 @@ function App() {
         hasActiveContract={!!uploadedFile}
       />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-        {/* Removed Upload/Analyzing states as requested by the user */}
+        {appState === 'analyzing' && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-primary)', padding: '40px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '3px solid rgba(14, 165, 233, 0.1)', borderTopColor: 'var(--accent-teal)', animation: 'spin 1s linear infinite', marginBottom: '25px' }}></div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '10px', background: 'linear-gradient(135deg, #fff 0%, #cbd5e1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Analizando Documento con IA</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: '480px', textAlign: 'center', lineHeight: '1.6' }}>
+              Extrayendo texto del PDF y evaluando cláusulas en base a la legislación y jurisprudencia chilena vigente...
+            </p>
+          </div>
+        )}
         {appState === 'dashboard' && (
           <>
             <DocumentViewer onTextClick={(id) => setActiveAlert(id)} contractData={contractData} contractType={contractType} uploadedFile={uploadedFile} />
             <CoworkerPanel activeAlert={activeAlert} onApply={handleApplyAmendment} contractData={contractData} />
           </>
         )}
-        {(appState === 'mis_contratos' || appState === 'base_jurisprudencial' || appState === 'configuracion' || appState === 'simulador_juicios') && (
+        {(appState === 'mis_contratos' || appState === 'base_jurisprudencial' || appState === 'configuracion') && (
           <MockViews 
             currentView={appState} 
             savedContracts={currentContracts} 
             onDeleteContract={deleteContract}
             onAddContract={addContract}
             onOpenContract={openContract}
+            onUploadContract={startAnalysis}
           />
         )}
       </div>

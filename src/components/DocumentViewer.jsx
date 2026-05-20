@@ -86,6 +86,75 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
 
   const renderContent = () => {
     const safeContractData = contractData || {};
+
+    // Si los datos vienen del backend con texto completo y hallazgos dinámicos
+    if (safeContractData.text && safeContractData.findings && Array.isArray(safeContractData.findings)) {
+      const { text, findings } = safeContractData;
+      
+      // Ordenar hallazgos por su posición en el texto original para evitar desalineaciones
+      const sortedFindings = [...findings]
+        .map(f => {
+          const index = text.indexOf(f.original);
+          return { ...f, index };
+        })
+        .filter(f => f.index !== -1)
+        .sort((a, b) => a.index - b.index);
+
+      if (sortedFindings.length === 0) {
+        return (
+          <div style={{ fontSize: '1.05rem', lineHeight: '2', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+            {text}
+          </div>
+        );
+      }
+
+      let result = [];
+      let lastIndex = 0;
+
+      sortedFindings.forEach((finding, idx) => {
+        // Texto anterior al hallazgo
+        if (finding.index > lastIndex) {
+          result.push(text.substring(lastIndex, finding.index));
+        }
+
+        // Span de resaltado interactivo
+        if (!finding.isFixed) {
+          result.push(
+            <span
+              key={finding.id || `f-${idx}`}
+              className="highlight-red"
+              style={{ cursor: 'pointer', padding: '2px 4px', borderRadius: '4px' }}
+              onClick={() => onTextClick(finding.id)}
+              title={finding.risk}
+            >
+              {finding.original}
+            </span>
+          );
+        } else {
+          result.push(
+            <span
+              key={finding.id || `f-${idx}`}
+              style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+            >
+              <CheckCircle size={14} /> {finding.fixed}
+            </span>
+          );
+        }
+
+        lastIndex = finding.index + finding.original.length;
+      });
+
+      if (lastIndex < text.length) {
+        result.push(text.substring(lastIndex));
+      }
+
+      return (
+        <div style={{ fontSize: '1.05rem', lineHeight: '2', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+          {result}
+        </div>
+      );
+    }
+
     if (contractType === 'Arriendo') {
       return (
         <div style={{ fontSize: '1.05rem', lineHeight: '2', color: '#cbd5e1' }}>

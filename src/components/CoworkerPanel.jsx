@@ -5,7 +5,40 @@ const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
   const safeContractData = contractData || {};
   
   const getAlertData = () => {
-    if (!activeAlert || !safeContractData[activeAlert]) return null;
+    if (!activeAlert) return null;
+    
+    // Si viene en el formato dinámico de hallazgos del backend
+    if (safeContractData.findings && Array.isArray(safeContractData.findings)) {
+      const finding = safeContractData.findings.find(f => f.id === activeAlert);
+      if (finding) {
+        let type = 'warning';
+        let title = 'Riesgo Detectado';
+        let agent = 'SUBAGENTE 2: RIESGOS';
+        let color = 'var(--alert-yellow)';
+        
+        // Asignar severidad/agente según el ID o contenido
+        if (finding.id.includes('ilegal') || finding.id.includes('abusiva') || finding.id.includes('eterno') || finding.id.includes('retencion')) {
+          type = 'danger';
+          title = 'Ilegalidad Detectada';
+          agent = 'SUBAGENTE 1: COMPLIANCE';
+          color = 'var(--alert-red)';
+        }
+
+        return {
+          original: finding.original,
+          fixed: finding.fixed,
+          risk: finding.risk,
+          recommendation: finding.recommendation,
+          type,
+          title,
+          agent,
+          color
+        };
+      }
+    }
+
+    // Estructura heredada (Legacy/Mock)
+    if (!safeContractData[activeAlert]) return null;
     
     const data = safeContractData[activeAlert];
     let type = 'warning';
@@ -13,14 +46,22 @@ const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
     let agent = 'SUBAGENTE 2: RIESGOS';
     let color = 'var(--alert-yellow)';
 
-    if (activeAlert.includes('ilegal') || activeAlert.includes('abusiva') || activeAlert.includes('eterno')) {
+    if (activeAlert.includes('ilegal') || activeAlert.includes('retencion') || activeAlert.includes('abusiva') || activeAlert.includes('eterno')) {
       type = 'danger';
       title = 'Ilegalidad Detectada';
       agent = 'SUBAGENTE 1: COMPLIANCE';
       color = 'var(--alert-red)';
     }
 
-    return { ...data, type, title, agent, color };
+    // Explicaciones estáticas para los mocks heredados
+    let risk = '';
+    if (activeAlert === 'riesgo-subordinacion') risk = 'Las "órdenes directas" son indicio de subordinación laboral bajo el Art. 7 del Código del Trabajo. Riesgo de demanda por reconocimiento de vínculo laboral.';
+    else if (activeAlert === 'ilegal-retencion') risk = 'La retención total de honorarios es desproporcionada y constituye un enriquecimiento sin causa según jurisprudencia chilena.';
+    else if (activeAlert === 'clausula-ajuste') risk = 'El ajuste mensual con interés adicional puede considerarse usurario. Se recomienda usar solo IPC semestral.';
+    else if (activeAlert === 'garantia-abusiva') risk = 'Retener garantía sin rendición de cuentas ni facturas justificadas vulnera el principio de buena fe contractual en arriendos.';
+    else if (activeAlert === 'plazo-eterno') risk = 'Las obligaciones perpetuas de confidencialidad son contrarias al orden público. Debe acotarse a un plazo máximo razonable.';
+
+    return { ...data, risk, type, title, agent, color };
   };
 
   const alertInfo = getAlertData();
@@ -54,12 +95,13 @@ const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
             </div>
             <h4 style={{ color: 'white', marginBottom: '12px', fontSize: '1.1rem' }}>{alertInfo.title}</h4>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              {activeAlert === 'riesgo-subordinacion' && 'Las "órdenes directas" son indicio de subordinación laboral. Riesgo de demanda por reconocimiento de vínculo laboral.'}
-              {activeAlert === 'ilegal-retencion' && 'La retención total de honorarios es desproporcionada y constituye un enriquecimiento sin causa según jurisprudencia.'}
-              {activeAlert === 'clausula-ajuste' && 'El ajuste mensual con interés adicional puede considerarse usurario. Se recomienda usar solo IPC semestral.'}
-              {activeAlert === 'garantia-abusiva' && 'Retener garantía sin rendición de cuentas vulnera el principio de buena fe contractual.'}
-              {activeAlert === 'plazo-eterno' && 'Las obligaciones perpetuas son contrarias al orden público. Debe acotarse a un plazo razonable.'}
+              {alertInfo.risk}
             </p>
+            {alertInfo.recommendation && (
+              <div style={{ marginTop: '15px', fontSize: '0.8rem', color: 'var(--accent-teal)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                <strong>Recomendación:</strong> {alertInfo.recommendation}
+              </div>
+            )}
           </div>
 
           {/* Panel de Enmienda */}

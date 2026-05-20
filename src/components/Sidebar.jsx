@@ -12,7 +12,6 @@ const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout, hasActiveContr
   menuItems.push(
     { name: 'Mis Contratos', icon: <FolderOpen size={20} /> },
     { name: 'Base Jurisprudencial', icon: <Scale size={20} /> },
-    { name: 'Simulador de Juicios', icon: <Gavel size={20} /> },
     { name: 'Configuración', icon: <Settings size={20} /> }
   );
 
