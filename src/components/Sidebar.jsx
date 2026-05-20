@@ -1,16 +1,21 @@
 import React from 'react';
 import { LayoutDashboard, FileSearch, FolderOpen, Scale, Gavel, Settings, UserCircle, LogOut } from 'lucide-react';
 
-const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout }) => {
+const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout, hasActiveContract }) => {
 
-  const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  const menuItems = [];
+  
+  if (hasActiveContract) {
+    menuItems.push({ name: 'Auditoría Activa', icon: <LayoutDashboard size={20} /> });
+  }
+
+  menuItems.push(
     { name: 'Nueva Auditoría', icon: <FileSearch size={20} /> },
     { name: 'Mis Contratos', icon: <FolderOpen size={20} /> },
     { name: 'Base Jurisprudencial', icon: <Scale size={20} /> },
     { name: 'Simulador de Juicios', icon: <Gavel size={20} /> },
     { name: 'Configuración', icon: <Settings size={20} /> }
-  ];
+  );
 
   return (
     <div style={{ width: '260px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', zIndex: 10 }}>

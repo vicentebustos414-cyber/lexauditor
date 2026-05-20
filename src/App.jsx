@@ -86,7 +86,7 @@ function App() {
     } finally {
       setTimeout(() => {
         setAppState('dashboard');
-        setActiveMenu('Dashboard');
+        setActiveMenu('Auditoría Activa');
       }, 1500);
     }
   };
@@ -100,9 +100,12 @@ function App() {
   const navigateTo = (menuItem) => {
     setActiveMenu(menuItem);
     if (menuItem === 'Nueva Auditoría') {
-      setAppState('upload'); setActiveAlert(null);
-      setContractData({ 'riesgo-subordinacion': { ...contractData['riesgo-subordinacion'], isFixed: false }, 'ilegal-retencion': { ...contractData['ilegal-retencion'], isFixed: false } });
-    } else if (menuItem === 'Dashboard') { setAppState('dashboard'); } 
+      setAppState('upload'); 
+      setActiveAlert(null);
+      setUploadedFile(null); // Resetear contrato activo para limpiar la barra lateral
+    } else if (menuItem === 'Auditoría Activa' || menuItem === 'Dashboard') { 
+      setAppState('dashboard'); 
+    } 
     else if (menuItem === 'Mis Contratos') { setAppState('mis_contratos'); } 
     else if (menuItem === 'Base Jurisprudencial') { setAppState('base_jurisprudencial'); } 
     else if (menuItem === 'Simulador de Juicios') { setAppState('simulador_juicios'); } 
@@ -128,6 +131,7 @@ function App() {
         activeMenu={activeMenu} 
         currentUser={currentUser} 
         onLogout={handleLogout} 
+        hasActiveContract={!!uploadedFile}
       />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {appState === 'upload' && <UploadScreen onUpload={startAnalysis} />}
