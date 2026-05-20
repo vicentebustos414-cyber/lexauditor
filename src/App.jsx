@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DocumentViewer from './components/DocumentViewer';
 import CoworkerPanel from './components/CoworkerPanel';
@@ -16,8 +16,24 @@ function App() {
   const [contractType, setContractType] = useState('Honorarios');
   const [uploadedFile, setUploadedFile] = useState(null);
 
-  // Repositorios independientes por usuario
-  const [allRepos, setAllRepos] = useState({});
+  // Repositorios independientes por usuario persistidos en el navegador local (Privacidad 100% de IP/Dispositivo)
+  const [allRepos, setAllRepos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lexauditor_repos');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      console.warn("LocalStorage no disponible:", e);
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lexauditor_repos', JSON.stringify(allRepos));
+    } catch (e) {
+      console.error("Error guardando repositorios en localStorage:", e);
+    }
+  }, [allRepos]);
   
   const [contractData, setContractData] = useState({
     'riesgo-subordinacion': { isFixed: false, original: "estando bajo las órdenes directas del Gerente de Operaciones", fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo" },
@@ -63,6 +79,22 @@ function App() {
 
       const data = await response.json();
       setContractData(data);
+
+      // Guardar el contrato en el repositorio del usuario (persistencia local)
+      const newContract = {
+        id: Date.now(),
+        name: file.name,
+        date: new Date().toLocaleDateString('es-CL'),
+        section: type === 'Honorarios' ? 'Laboral' : type === 'Arriendo' ? 'Comercial' : 'Confidencialidad',
+        status: 'Alerta',
+        contractType: type,
+        data: data
+      };
+      setAllRepos(prev => ({
+        ...prev,
+        [currentUser]: [newContract, ...(prev[currentUser] || [])]
+      }));
+
     } catch (err) {
       console.warn('Falló el backend seguro, usando simulación local integrada:', err);
       // Simular carga de datos específicos según el tipo
@@ -79,7 +111,24 @@ function App() {
           'plazo-eterno': { isFixed: false, original: "la obligación de confidencialidad será perpetua e irrevocable para todos los herederos", fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial" }
         }
       };
-      setContractData(mockData[type] || mockData['Honorarios']);
+      const finalData = mockData[type] || mockData['Honorarios'];
+      setContractData(finalData);
+
+      // Guardar incluso en modo de simulación
+      const newContract = {
+        id: Date.now(),
+        name: file.name,
+        date: new Date().toLocaleDateString('es-CL'),
+        section: type === 'Honorarios' ? 'Laboral' : type === 'Arriendo' ? 'Comercial' : 'Confidencialidad',
+        status: 'Alerta',
+        contractType: type,
+        data: finalData
+      };
+      setAllRepos(prev => ({
+        ...prev,
+        [currentUser]: [newContract, ...(prev[currentUser] || [])]
+      }));
+
     } finally {
       setTimeout(() => {
         setAppState('dashboard');
@@ -92,6 +141,14 @@ function App() {
   const handleApplyAmendment = (alertId) => {
     setContractData(prev => ({ ...prev, [alertId]: { ...prev[alertId], isFixed: true } }));
     setActiveAlert(null); 
+  };
+
+  const openContract = (doc) => {
+    setContractData(doc.data);
+    setUploadedFile({ name: doc.name, size: 0 }); // Spoof file object
+    setContractType(doc.contractType || 'Honorarios');
+    setAppState('dashboard');
+    setActiveMenu('Auditoría Activa');
   };
 
   const navigateTo = (menuItem) => {
@@ -151,6 +208,7 @@ function App() {
             savedContracts={currentContracts} 
             onDeleteContract={deleteContract}
             onAddContract={addContract}
+            onOpenContract={openContract}
           />
         )}
       </div>
