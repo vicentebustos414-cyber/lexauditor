@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Languages, X, Move, MessageSquare, ArrowUp, PenTool } from 'lucide-react';
+import { CheckCircle, Languages, X, Move, MessageSquare, ArrowUp, PenTool, FileText } from 'lucide-react';
 
 const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile }) => {
   const [showTranslator, setShowTranslator] = useState(false);
