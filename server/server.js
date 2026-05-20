@@ -4,15 +4,48 @@ import multer from 'multer';
 import pdfParse from 'pdf-parse';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { rateLimit } from 'express-rate-limit';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configuración de CORS permitiendo el acceso desde el frontend en desarrollo y producción
-app.use(cors());
+// Configuración de CORS con restricción de origen estricta
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origen (como herramientas móviles o curl local en desarrollo)
+    if (!origin) return callback(null, true);
+    
+    // Validar si el origen de la petición está en la lista de permitidos
+    const isAllowed = allowedOrigins.some(allowed => {
+      return allowed.trim().replace(/\/$/, '') === origin.trim().replace(/\/$/, '');
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Acceso bloqueado por políticas CORS de seguridad de LexAuditor.'));
+    }
+  }
+}));
+
 app.use(express.json());
+
+// Limitador de peticiones (Rate Limiter) para prevenir abusos y ataques DDoS en el procesamiento de PDFs
+const auditLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Ventana de 15 minutos
+  max: 30, // Máximo 30 auditorías por dirección IP dentro de la ventana
+  message: { error: 'Demasiadas solicitudes de auditoría desde esta IP. Por favor intente más tarde (límite de seguridad anti-abuso).' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Ingesta segura en memoria (Zero Disk Persistence)
 const storage = multer.memoryStorage();
@@ -37,8 +70,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Endpoint principal de auditoría legal
-app.post('/api/audit', upload.single('file'), async (req, res) => {
+// Endpoint principal de auditoría legal con protección de límite de tasa
+app.post('/api/audit', auditLimiter, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
