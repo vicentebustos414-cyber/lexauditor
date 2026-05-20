@@ -238,71 +238,207 @@ Genera una respuesta en formato JSON con la siguiente estructura:
 
 // Función de simulación robusta para auditoría
 function simulateResponse(contractType, textContent, res) {
-  const defaultText = textContent || `CONTRATO DE PRESTACIÓN DE SERVICIOS INDEPENDIENTES (HONORARIOS)
+  const defaultText = `CONTRATO DE PRESTACIÓN DE SERVICIOS INDEPENDIENTES (HONORARIOS)
 En Santiago de Chile, se celebra el presente contrato entre la Empresa y el Prestador.
 El prestador se compromete a realizar servicios de consultoría general.
 El prestador desempeñará sus funciones estando bajo las órdenes directas del Gerente de Operaciones de la empresa.
 En caso de término anticipado o renuncia voluntaria, la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento.`;
 
-  const mockFindings = {
-    'Honorarios': [
+  const finalContentText = textContent || defaultText;
+  const findings = [];
+
+  // Analizar heurísticamente el texto del usuario para encontrar cláusulas de riesgo reales
+  if (contractType === 'Laboral' || contractType === 'Honorarios') {
+    // 1. Buscar subordinación laboral
+    const subordinacionPatterns = [
+      /órdenes directas/i,
+      /bajo la subordinación/i,
+      /bajo las órdenes/i,
+      /cumplir horario/i,
+      /jornada de trabajo/i
+    ];
+    
+    let subMatch = null;
+    for (const pat of subordinacionPatterns) {
+      const match = finalContentText.match(pat);
+      if (match) {
+        subMatch = match[0];
+        break;
+      }
+    }
+
+    if (subMatch) {
+      const sentence = getSurroundingSentence(finalContentText, subMatch);
+      findings.push({
+        id: 'riesgo-subordinacion',
+        isFixed: false,
+        original: sentence,
+        fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo",
+        risk: "La frase sugiere una relación de subordinación laboral bajo la legislación chilena (Art. 7 del Código del Trabajo). Esto puede facultar al prestador a demandar el reconocimiento de una relación laboral y el cobro de cotizaciones de seguridad social e indemnizaciones por término de contrato.",
+        recommendation: "Reemplazar por una fórmula que especifique autonomía técnica y coordinación de hitos para evitar la presunción de contrato de trabajo."
+      });
+    }
+
+    // 2. Buscar retención ilegal de honorarios
+    const retencionPatterns = [
+      /retendrá la totalidad/i,
+      /retener los honorarios/i,
+      /retención de honorarios/i,
+      /multa a todo evento/i,
+      /no se pagará el mes/i
+    ];
+    
+    let retMatch = null;
+    for (const pat of retencionPatterns) {
+      const match = finalContentText.match(pat);
+      if (match) {
+        retMatch = match[0];
+        break;
+      }
+    }
+
+    if (retMatch) {
+      const sentence = getSurroundingSentence(finalContentText, retMatch);
+      findings.push({
+        id: 'ilegal-retencion',
+        isFixed: false,
+        original: sentence,
+        fixed: "las partes acuerdan una avaluación anticipada de perjuicios equivalente al 10% de los honorarios, sin perjuicio del pago íntegro de los honorarios ya devengados",
+        risk: "La retención unilateral de honorarios ya devengados por trabajos prestados es abusiva e ilegal en Chile. Atenta contra el principio de buena fe y constituye un enriquecimiento sin causa.",
+        recommendation: "Establecer una multa máxima del 10% o cláusula penal razonable y proporcional en lugar de una retención absoluta."
+      });
+    }
+  }
+
+  else if (contractType === 'Arriendo' || contractType === 'Comercial') {
+    // 1. Buscar reajustes abusivos
+    const reajustePatterns = [
+      /reajustará mensualmente/i,
+      /IPC más/i,
+      /interés adicional/i,
+      /renta se reajustará cada mes/i
+    ];
+    
+    let reajMatch = null;
+    for (const pat of reajustePatterns) {
+      const match = finalContentText.match(pat);
+      if (match) {
+        reajMatch = match[0];
+        break;
+      }
+    }
+
+    if (reajMatch) {
+      const sentence = getSurroundingSentence(finalContentText, reajMatch);
+      findings.push({
+        id: 'clausula-ajuste',
+        isFixed: false,
+        original: sentence,
+        fixed: "la renta se reajustará semestralmente según la variación del IPC informado por el Instituto Nacional de Estadísticas",
+        risk: "Los reajustes mensuales junto con intereses adicionales pueden considerarse abusivos o usurarios bajo la Ley N° 18.101 de arrendamiento urbano. El estándar es reajuste semestral o anual por IPC simple.",
+        recommendation: "Limitar la periodicidad del reajuste a semestral o anual y eliminar cualquier recargo de interés adicional."
+      });
+    }
+
+    // 2. Buscar retención arbitraria de garantía
+    const garantiaPatterns = [
+      /retener la garantía/i,
+      /sin necesidad de rendir cuentas/i,
+      /daño estético menor/i,
+      /no se devolverá la garantía/i
+    ];
+    
+    let garMatch = null;
+    for (const pat of garantiaPatterns) {
+      const match = finalContentText.match(pat);
+      if (match) {
+        garMatch = match[0];
+        break;
+      }
+    }
+
+    if (garMatch) {
+      const sentence = getSurroundingSentence(finalContentText, garMatch);
+      findings.push({
+        id: 'garantia-abusiva',
+        isFixed: false,
+        original: sentence,
+        fixed: "el arrendador restituirá la garantía dentro de 30 días de la entrega de llaves, deduciendo únicamente daños justificados con presupuestos y facturas",
+        risk: "Retener la garantía de forma unilateral y sin rendición de cuentas viola las normas de los Juzgados de Policía Local. Todo descuento debe justificarse con facturas y presupuestos formales.",
+        recommendation: "Fijar devolución en un plazo de 30 días y obligar al arrendador a justificar los descuentos formalmente."
+      });
+    }
+  }
+
+  else if (contractType === 'Confidencialidad' || contractType === 'NDA') {
+    // 1. Buscar confidencialidad perpetua
+    const perpetuaPatterns = [
+      /será perpetua/i,
+      /duración indefinida/i,
+      /plazo perpetuo/i,
+      /para siempre/i,
+      /todos los herederos/i
+    ];
+    
+    let perpMatch = null;
+    for (const pat of perpetuaPatterns) {
+      const match = finalContentText.match(pat);
+      if (match) {
+        perpMatch = match[0];
+        break;
+      }
+    }
+
+    if (perpMatch) {
+      const sentence = getSurroundingSentence(finalContentText, perpMatch);
+      findings.push({
+        id: 'plazo-eterno',
+        isFixed: false,
+        original: sentence,
+        fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial",
+        risk: "La confidencialidad de carácter perpetuo sin límite razonable suele ser considerada abusiva e inválida por los tribunales ordinarios chilenos, ya que restringe de forma excesiva la libertad de trabajo y comercio.",
+        recommendation: "Establecer un plazo definido de confidencialidad (típicamente entre 2 a 5 años)."
+      });
+    }
+  }
+
+  // Si es el texto por defecto o no hay findings, inyectamos los hallazgos por defecto correspondientes para evitar que la vista esté completamente vacía
+  if (findings.length === 0 && !textContent) {
+    findings.push(
       {
         id: 'riesgo-subordinacion',
         isFixed: false,
         original: "estando bajo las órdenes directas del Gerente de Operaciones",
         fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo",
-        risk: "La frase 'bajo las órdenes directas' del Gerente de Operaciones es un claro indicio de subordinación laboral bajo la legislación chilena (Art. 7 del Código del Trabajo). Esto puede habilitar al prestador a demandar el reconocimiento de una relación laboral y el cobro de cotizaciones de seguridad social, indemnizaciones por años de servicio, etc.",
-        recommendation: "Reemplazar por una fórmula que especifique autonomía técnica y coordinación de hitos para evitar la presunción de contrato de trabajo."
+        risk: "La frase sugiere una relación de subordinación laboral bajo la legislación chilena (Art. 7 del Código del Trabajo). Esto puede facultar al prestador a demandar el reconocimiento de una relación laboral y el cobro de cotizaciones de seguridad social.",
+        recommendation: "Reemplazar por autonomía en la prestación del servicio."
       },
       {
         id: 'ilegal-retencion',
         isFixed: false,
         original: "la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento",
         fixed: "las partes acuerdan una avaluación anticipada de perjuicios equivalente al 10% de los honorarios, sin perjuicio del pago íntegro de los honorarios ya devengados",
-        risk: "La retención unilateral de honorarios ya devengados por trabajos prestados es ilegal y abusiva, vulnerando el enriquecimiento sin causa y las normas de protección del pago de servicios. Los honorarios ya devengados constituyen propiedad del prestador.",
-        recommendation: "Establecer una multa máxima de indemnización del 10% o cláusula penal razonable y proporcional en lugar de retención absoluta."
+        risk: "La retención unilateral de honorarios ya devengados por trabajos prestados es abusiva e ilegal en Chile.",
+        recommendation: "Reemplazar por multa porcentual sobre saldos no pagados."
       }
-    ],
-    'Arriendo': [
-      {
-        id: 'clausula-ajuste',
-        isFixed: false,
-        original: "la renta se reajustará mensualmente según el IPC más un 5% adicional de interés",
-        fixed: "la renta se reajustará semestralmente según la variación del IPC informado por el Instituto Nacional de Estadísticas",
-        risk: "El reajuste mensual sumado a un interés fijo de recargo roza la usura y resulta altamente perjudicial para el arrendatario. Bajo la Ley de Arrendamiento Urbano N° 18.101, la buena fe contractual exige reajustes estandarizados (generalmente semestrales o anuales por IPC simple).",
-        recommendation: "Remover el interés adicional y limitar los reajustes a una periodicidad semestral o anual en base al IPC simple."
-      },
-      {
-        id: 'garantia-abusiva',
-        isFixed: false,
-        original: "el arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas",
-        fixed: "el arrendador restituirá la garantía dentro de 30 días de la entrega de llaves, deduciendo únicamente daños justificados con presupuestos y facturas",
-        risk: "La retención discrecional de la garantía es abusiva y contraria a la jurisprudencia de los Juzgados de Policía Local chilenos, que exigen al arrendador documentar y justificar detalladamente cualquier descuento mediante cotizaciones y facturas formales.",
-        recommendation: "Especificar que la devolución debe hacerse en 30 días y que cualquier retención debe justificarse detalladamente con facturas."
-      }
-    ],
-    'NDA': [
-      {
-        id: 'plazo-eterno',
-        isFixed: false,
-        original: "la obligación de confidencialidad será perpetua e irrevocable para todos los herederos",
-        fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial",
-        risk: "Las obligaciones perpetuas sin delimitación temporal atentan contra la libertad contractual y la buena fe. Los tribunales chilenos suelen considerar abusivas o nulas las cláusulas de confidencialidad eternas, limitando su validez a plazos razonables.",
-        recommendation: "Fijar un plazo de vigencia razonable (habitualmente entre 2 y 5 años) contados desde la finalización del contrato."
-      }
-    ]
-  };
+    );
+  }
 
-  const findings = mockFindings[contractType] || mockFindings['Honorarios'];
-
-  // Para asegurar que el texto del simulador contenga las frases a resaltar si el usuario subió otro texto:
-  let finalContentText = textContent || defaultText;
-  
-  findings.forEach(f => {
-    if (!finalContentText.includes(f.original)) {
-      finalContentText += `\n\n[Cláusula Simulada de Control]: ${f.original}`;
+  // Si no se encontraron hallazgos en el PDF real del usuario, agregamos una recomendación estándar sobre jurisdicción basada en un fragmento de su texto real
+  if (findings.length === 0 && textContent) {
+    const lines = finalContentText.split('\n').map(l => l.trim()).filter(l => l.length > 30 && !l.startsWith('['));
+    if (lines.length > 0) {
+      const targetSentence = lines[Math.min(lines.length - 1, 2)];
+      findings.push({
+        id: 'riesgo-general',
+        isFixed: false,
+        original: targetSentence,
+        fixed: targetSentence + " (conforme a los términos y resolución amigable de controversias por arbitraje de la CAM Santiago)",
+        risk: "Cláusula contractual estándar. Se recomienda detallar el mecanismo de resolución de controversias (por ejemplo, sumisión a los Tribunales Ordinarios de Justicia de Santiago o arbitraje CAM Santiago) para mayor certeza jurídica.",
+        recommendation: "Agregar cláusula de jurisdicción y ley aplicable clara."
+      });
     }
-  });
+  }
 
   const response = {
     text: finalContentText,
@@ -312,6 +448,26 @@ En caso de término anticipado o renuncia voluntaria, la empresa retendrá la to
   setTimeout(() => {
     res.json(response);
   }, 1000);
+}
+
+function getSurroundingSentence(text, matchStr) {
+  const index = text.indexOf(matchStr);
+  if (index === -1) return matchStr;
+
+  let start = index;
+  while (start > 0 && text[start] !== '.' && text[start] !== '\n') {
+    start--;
+  }
+  if (text[start] === '.' || text[start] === '\n') {
+    start++;
+  }
+
+  let end = index + matchStr.length;
+  while (end < text.length && text[end] !== '.' && text[end] !== '\n') {
+    end++;
+  }
+
+  return text.substring(start, end).trim();
 }
 
 // Función de simulación para Jurisprudencia
