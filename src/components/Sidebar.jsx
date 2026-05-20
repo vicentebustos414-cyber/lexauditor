@@ -10,6 +10,7 @@ const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout, hasActiveContr
   }
 
   menuItems.push(
+    { name: 'Subir Contrato', icon: <Plus size={20} /> },
     { name: 'Mis Contratos', icon: <FolderOpen size={20} /> },
     { name: 'Base Jurisprudencial', icon: <Scale size={20} /> },
     { name: 'Configuración', icon: <Settings size={20} /> }
