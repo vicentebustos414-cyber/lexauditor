@@ -539,6 +539,101 @@ function simulateJurisprudenciaResponse(query, res) {
   return res.json({ results });
 }
 
+// Endpoint del chat legal inteligente
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages, contractText, contractType } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'La lista de mensajes es obligatoria.' });
+    }
+
+    const latestMessage = messages[messages.length - 1]?.text;
+    if (!latestMessage) {
+      return res.status(400).json({ error: 'El último mensaje no es válido.' });
+    }
+
+    // Si no hay API key configurada, emular la respuesta inteligente
+    if (!ai) {
+      return simulateChatResponse(latestMessage, contractType, res);
+    }
+
+    // Configurar modelo de Gemini con instrucciones de sistema personalizadas para el contrato
+    const model = ai.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: `Eres un abogado y Compliance Officer experto llamado LexAuditor. Tu objetivo es asesorar al usuario y responder sus dudas sobre el contrato proporcionado bajo el ordenamiento jurídico de Chile (Código Civil, Código del Trabajo, Ley 18.101, etc.).
+      
+Texto del contrato a analizar:
+"""
+${contractText || 'No provisto.'}
+"""
+
+Tipo de Contrato: ${contractType || 'Honorarios'}
+
+Instrucciones:
+1. Responde de manera profesional, clara, precisa y directa.
+2. Enfócate siempre en el contexto de la conversación y del contrato suministrado.
+3. Si el usuario te pregunta por cláusulas abusivas, indicios de subordinación o ilegalidades, explícaselo en base a la ley chilena (ej. Art. 7 del Código del Trabajo, protección al consumidor, reajustes excesivos, etc.).
+4. Responde en español de forma fluida, actuando como un asesor legal cercano y confiable.`
+    });
+
+    // Convertir el historial de mensajes al formato que espera Gemini:
+    // [{ role: 'user' | 'model', parts: [{ text: string }] }]
+    const contents = messages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }));
+
+    const result = await model.generateContent({ contents });
+    const responseText = result.response.text();
+
+    res.json({ text: responseText });
+  } catch (err) {
+    console.error('Error en el chat legal:', err);
+    res.status(500).json({ error: 'Ocurrió un error interno en el chat legal.' });
+  }
+});
+
+// Función de simulación para el chat legal
+function simulateChatResponse(userMsg, contractType, res) {
+  const query = userMsg.toLowerCase();
+  let responseText = "Lo siento, no encuentro esa información específica en el documento. ¿Podrías ser más específico o citar la cláusula que te genera dudas?";
+
+  if (contractType === 'Honorarios' || contractType === 'Laboral') {
+    if (query.includes('error') || query.includes('sptimo') || query.includes('septimo') || query.includes('retend') || query.includes('multa') || query.includes('anticipado')) {
+      responseText = "En la cláusula SÉPTIMA de este contrato a honorarios se establece que si renuncias o si se termina de forma anticipada, la empresa retendrá el 100% de tus honorarios del mes en curso como multa. Esto es ilegal bajo la ley chilena: atenta contra el enriquecimiento sin causa y el derecho a percibir remuneración por el trabajo efectivamente realizado. Te sugerimos negociar para cambiarlo por una multa proporcional (por ejemplo, del 10%) o eliminar la retención absoluta.";
+    } else if (query.includes('subordinacion') || query.includes('jefe') || query.includes('ordenes') || query.includes('tercero') || query.includes('gerente')) {
+      responseText = "La cláusula TERCERA indica que realizarás tus labores 'bajo las órdenes directas' del Gerente de Operaciones. Bajo el Código del Trabajo chileno (Art. 7), esto configura subordinación y dependencia directa. En un contrato de honorarios (independiente) esto es un grave error de cumplimiento (indicio laboral), y habilita al trabajador a demandar el reconocimiento de relación de trabajo y pago de cotizaciones retroactivas.";
+    } else if (query.includes('pago') || query.includes('honorario') || query.includes('boleta') || query.includes('cuarto')) {
+      responseText = "La cláusula CUARTA estipula el pago contra boleta de honorarios a los 30 días posteriores al cierre del mes en curso. Esto es legal, pero debes tener cuidado de que no se use para retener tus honorarios de forma abusiva.";
+    } else if (query.includes('hola') || query.includes('buenos dias') || query.includes('buenas tardes')) {
+      responseText = "¡Hola! Soy tu asistente legal LexAuditor. ¿Tienes alguna duda sobre las cláusulas de subordinación, pagos o término anticipado de este contrato a honorarios?";
+    }
+  } else if (contractType === 'Arriendo' || contractType === 'Comercial') {
+    if (query.includes('garantia') || query.includes('retener') || query.includes('dao') || query.includes('danio') || query.includes('tercero')) {
+      responseText = "En la cláusula TERCERA se autoriza al arrendador a retener la garantía por 'daños estéticos menores' sin rendir cuentas. Bajo la jurisprudencia de los Juzgados de Policía Local chilenos, esto es abusivo. El arrendador está obligado a rendir cuentas documentadas y presentar facturas para justificar los descuentos. Te sugerimos modificarla para fijar la devolución a 30 días y exigir presupuestos y facturas reales.";
+    } else if (query.includes('reajuste') || query.includes('ipc') || query.includes('segundo') || query.includes('mensual')) {
+      responseText = "La cláusula SEGUNDA establece un reajuste mensual por IPC más un 5% de interés. Esta tasa y periodicidad mensual son abusivas y rozan la usura. Bajo la Ley de Arriendo N° 18.101, la práctica recomendada es un reajuste semestral o anual basado en la variación pura del IPC.";
+    } else if (query.includes('hola') || query.includes('buenos dias')) {
+      responseText = "¡Hola! Soy tu asistente legal LexAuditor. ¿Qué te gustaría revisar sobre el contrato de arrendamiento? Puedo guiarte sobre el mes de garantía o los reajustes de renta.";
+    }
+  } else if (contractType === 'NDA' || contractType === 'Confidencialidad') {
+    if (query.includes('vigencia') || query.includes('perpetua') || query.includes('eterna') || query.includes('quinta') || query.includes('plazo')) {
+      responseText = "La cláusula QUINTA establece que la obligación de confidencialidad es perpetua e irrevocable para todos los herederos. Bajo el ordenamiento chileno, imponer obligaciones eternas atenta contra la libertad contractual y la libre competencia. Los tribunales suelen reducirlas o declararlas abusivas. Te sugerimos fijar un plazo razonable de vigencia de 2 a 5 años tras finalizar la relación comercial.";
+    } else if (query.includes('hola') || query.includes('buenos dias')) {
+      responseText = "¡Hola! Soy tu asistente legal LexAuditor. ¿Tienes dudas sobre la vigencia perpetua del acuerdo de confidencialidad o el alcance de la información reservada?";
+    }
+  }
+
+  // Si no encaja con nada específico pero saluda o pregunta en general
+  if (responseText.startsWith("Lo siento") && (query.includes('gracias') || query.includes('ok') || query.includes('entendido') || query.includes('gracia'))) {
+    responseText = "¡De nada! Estoy para asesorarte en lo que necesites para proteger tus derechos contractuales.";
+  }
+
+  setTimeout(() => {
+    res.json({ text: responseText });
+  }, 1000);
+}
+
 app.listen(PORT, () => {
   console.log(`Servidor seguro LexAuditor corriendo en http://localhost:${PORT}`);
 });

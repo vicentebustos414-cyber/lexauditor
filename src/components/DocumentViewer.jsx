@@ -53,28 +53,91 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
     setShowTranslator(true);
   };
 
-  const handleSendMessage = (e) => {
+  const getCleanContractText = () => {
+    if (contractData && contractData.text) {
+      return contractData.text;
+    }
+    
+    // Si es un template mock, devolvemos el texto correspondiente
+    if (contractType === 'Arriendo') {
+      return `CONTRATO DE ARRENDAMIENTO
+En Santiago, comparecen Don/Doña Arrendador y por otra parte el Arrendatario.
+PRIMERO: El inmueble se entrega en condiciones óptimas de habitabilidad.
+SEGUNDO (Renta): La renta de arrendamiento será de $500.000 mensuales. La renta se reajustará mensualmente según el IPC más un 5% adicional de interés.
+TERCERO (Garantía): Se entrega un mes de garantía. El arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas.`;
+    }
+    
+    if (contractType === 'NDA') {
+      return `ACUERDO DE CONFIDENCIALIDAD
+Las Partes se obligan a mantener estricta reserva sobre toda la información intercambiada.
+CLÁUSULA QUINTA (Vigencia): La obligación de confidencialidad será perpetua e irrevocable para todos los herederos.`;
+    }
+    
+    // Default: Honorarios
+    return `CONTRATO DE PRESTACIÓN DE SERVICIOS INDEPENDIENTES (HONORARIOS)
+En Santiago de Chile, entre EMPRESA XYZ SPA... y por la otra parte el Trabajador Independiente...
+TERCERO: El prestador de servicios deberá cumplir con sus labores, estando bajo las órdenes directas del Gerente de Operaciones, debiendo reportar avances según se acuerde.
+CUARTO: Los honorarios se pagarán contra entrega de boleta, a los 30 días posteriores al cierre de mes.
+SÉPTIMO: En caso de término anticipado del presente contrato, la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento.`;
+  };
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    const userMsg = chatInput.toLowerCase();
-    setChatMessages([...chatMessages, { role: 'user', text: chatInput }]);
+    const userText = chatInput;
+    const updatedMessages = [...chatMessages, { role: 'user', text: userText }];
+    
+    setChatMessages(updatedMessages);
     setChatInput('');
+    
+    // Agregar indicador de escritura temporal
+    setChatMessages(prev => [...prev, { role: 'ai', text: 'Escribiendo respuesta...', isTyping: true }]);
 
-    // Simulación de respuesta IA basada en el contrato
-    setTimeout(() => {
-      let aiResponse = "Lo siento, no encuentro esa información específica en el documento. ¿Puedes ser más preciso?";
-      
-      if (userMsg.includes('renunciar') || userMsg.includes('termino') || userMsg.includes('plazo')) {
-        aiResponse = "El contrato establece un término anticipado. Sin embargo, hemos detectado que la cláusula de retención de honorarios es abusiva según la jurisprudencia chilena.";
-      } else if (userMsg.includes('pago') || userMsg.includes('dinero') || userMsg.includes('honorarios')) {
-        aiResponse = "Los honorarios se pagan a los 30 días posteriores al cierre de mes, previa entrega de la boleta de honorarios correspondiente.";
-      } else if (userMsg.includes('ordenes') || userMsg.includes('jefe') || userMsg.includes('horario')) {
-        aiResponse = "Cuidado: El texto original sugiere que estás bajo órdenes directas, lo cual podría implicar una relación laboral encubierta (Art. 7 Código del Trabajo).";
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages,
+          contractText: getCleanContractText(),
+          contractType: contractType
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al conectar con la API de chat legal');
       }
 
-      setChatMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
-    }, 1000);
+      const data = await response.json();
+      
+      // Reemplazar el mensaje de "Escribiendo..." con el resultado real
+      setChatMessages(prev => {
+        const filtered = prev.filter(m => !m.isTyping);
+        return [...filtered, { role: 'ai', text: data.text }];
+      });
+    } catch (err) {
+      console.error('Error enviando mensaje al chat legal:', err);
+      // Fallback local simulado en caso de error de red o backend desconectado
+      setTimeout(() => {
+        const query = userText.toLowerCase();
+        let aiResponse = "Lo siento, no encuentro esa información específica en el documento. ¿Puedes ser más preciso?";
+        
+        if (query.includes('error') || query.includes('sptimo') || query.includes('septimo') || query.includes('retend') || query.includes('multa') || query.includes('anticipado')) {
+          aiResponse = "En la cláusula SÉPTIMA de este contrato a honorarios se establece que si renuncias o si se termina de forma anticipada, la empresa retendrá el 100% de tus honorarios del mes en curso como multa. Esto es ilegal bajo la ley chilena: atenta contra el enriquecimiento sin causa y el derecho a percibir remuneración por el trabajo efectivamente realizado.";
+        } else if (query.includes('subordinacion') || query.includes('jefe') || query.includes('ordenes') || query.includes('tercero') || query.includes('gerente')) {
+          aiResponse = "La cláusula TERCERA indica que realizarás tus labores 'bajo las órdenes directas' del Gerente de Operaciones. Bajo el Código del Trabajo chileno (Art. 7), esto configura subordinación y dependencia directa. En un contrato de honorarios (independiente) esto es un grave indicio laboral.";
+        } else if (query.includes('pago') || query.includes('honorarios') || query.includes('boleta') || query.includes('cuarto')) {
+          aiResponse = "Los honorarios se pagan a los 30 días posteriores al cierre de mes, previa entrega de la boleta de honorarios correspondiente.";
+        }
+
+        setChatMessages(prev => {
+          const filtered = prev.filter(m => !m.isTyping);
+          return [...filtered, { role: 'ai', text: aiResponse }];
+        });
+      }, 1000);
+    }
   };
 
   const handleSignFlow = () => {
@@ -302,7 +365,9 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
                 maxWidth: '85%',
                 fontSize: '0.9rem',
                 color: 'white',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                fontStyle: msg.isTyping ? 'italic' : 'normal',
+                opacity: msg.isTyping ? 0.75 : 1
               }}>
                 {msg.text}
               </div>
