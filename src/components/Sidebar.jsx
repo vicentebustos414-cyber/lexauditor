@@ -10,7 +10,6 @@ const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout, hasActiveContr
   }
 
   menuItems.push(
-    { name: 'Nueva Auditoría', icon: <FileSearch size={20} /> },
     { name: 'Mis Contratos', icon: <FolderOpen size={20} /> },
     { name: 'Base Jurisprudencial', icon: <Scale size={20} /> },
     { name: 'Simulador de Juicios', icon: <Gavel size={20} /> },

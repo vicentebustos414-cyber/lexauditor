@@ -68,8 +68,20 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
   const handleAdd = (e) => {
     e.preventDefault();
     if (!newDocName || !newSectionName) return;
-    onAddContract({ name: newDocName.includes('.') ? newDocName : `${newDocName}.pdf`, date: new Date().toLocaleDateString('es-CL'), section: newSectionName, status: 'Pendiente' });
-    setNewDocName(''); setShowAddForm(false);
+    let contractType = 'Honorarios';
+    if (newSectionName === 'Comercial') contractType = 'Arriendo';
+    else if (newSectionName === 'Confidencialidad') contractType = 'NDA';
+
+    onAddContract({ 
+      name: newDocName.includes('.') ? newDocName : `${newDocName}.pdf`, 
+      date: new Date().toLocaleDateString('es-CL'), 
+      section: newSectionName, 
+      contractType: contractType,
+      status: 'Alerta' 
+    });
+    setNewDocName(''); 
+    setNewSectionName('');
+    setShowAddForm(false);
   };
 
   const handleSearch = () => {
@@ -119,8 +131,17 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
               <form onSubmit={handleAdd} className="glass-panel glow-active" style={{ padding: '25px', marginBottom: '40px', border: '1px dashed var(--accent-teal)', background: 'rgba(14, 165, 233, 0.02)' }}>
                 <h4 style={{ marginBottom: '20px', color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: '10px' }}><Zap size={18} /> Registrar Nuevo Documento</h4>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                  <input value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} type="text" placeholder="Carpeta / Sección" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white' }} />
-                  <input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} type="text" placeholder="Nombre del PDF" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white' }} />
+                  <select 
+                    value={newSectionName} 
+                    onChange={(e) => setNewSectionName(e.target.value)} 
+                    style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer' }}
+                  >
+                    <option value="">Selecciona Tipo de Contrato</option>
+                    <option value="Laboral">Prestación de Servicios (Honorarios)</option>
+                    <option value="Comercial">Contrato de Arriendo</option>
+                    <option value="Confidencialidad">Acuerdo de Confidencialidad (NDA)</option>
+                  </select>
+                  <input value={newDocName} onChange={(e) => setNewDocName(e.target.value)} type="text" placeholder="Nombre del PDF (ej: contrato-trabajo)" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white' }} />
                   <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Añadir</button>
                 </div>
               </form>
@@ -130,9 +151,9 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
               <div className="glass-panel" style={{ textAlign: 'center', padding: '50px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>
                 <FolderOpen size={48} color="var(--text-secondary)" style={{ marginBottom: '20px', opacity: 0.3 }} />
                 <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '1.2rem' }}>Tu Repositorio está Vacío</h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 20px', lineHeight: '1.6' }}>
-                  No hay contratos registrados en tu cuenta. Sube un documento en "Nueva Auditoría" para iniciar el análisis legal e IA.
-                </p>
+                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 20px', lineHeight: '1.6' }}>
+                   No hay contratos registrados en tu cuenta. Haz clic en "NUEVO ARCHIVO" arriba para registrar tu contrato e iniciar la auditoría.
+                 </p>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 15px', background: 'rgba(16, 185, 129, 0.04)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)', fontSize: '0.8rem', color: 'var(--success-green)' }}>
                   <span>🔒</span>
                   <span><strong>Privacidad al 100%:</strong> Tus archivos se analizan en memoria de tu navegador y no se guardan en servidores públicos ni bases de datos externas.</span>

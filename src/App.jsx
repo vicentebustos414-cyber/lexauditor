@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DocumentViewer from './components/DocumentViewer';
 import CoworkerPanel from './components/CoworkerPanel';
-import UploadScreen from './components/UploadScreen';
 import MockViews from './components/MockViews';
 import LoginScreen from './components/LoginScreen';
 import './index.css';
@@ -10,7 +9,7 @@ import './index.css';
 function App() {
   const [appState, setAppState] = useState('login'); 
   const [activeAlert, setActiveAlert] = useState(null);
-  const [activeMenu, setActiveMenu] = useState('Nueva Auditoría');
+  const [activeMenu, setActiveMenu] = useState('Mis Contratos');
   
   const [currentUser, setCurrentUser] = useState(null);
   const [contractType, setContractType] = useState('Honorarios');
@@ -49,7 +48,8 @@ function App() {
         [identifier]: [] 
       }));
     }
-    setAppState('upload');
+    setAppState('mis_contratos');
+    setActiveMenu('Mis Contratos');
   };
 
   const handleLogout = () => {
@@ -146,20 +146,30 @@ function App() {
 
   const openContract = (doc) => {
     setActiveAlert(null);
-    setContractData(doc.data);
+    const mockTemplates = {
+      'Honorarios': {
+        'riesgo-subordinacion': { isFixed: false, original: "estando bajo las órdenes directas del Gerente de Operaciones", fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo" },
+        'ilegal-retencion': { isFixed: false, original: "la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento", fixed: "las partes acuerdan una avaluación anticipada de perjuicios equivalente al 10% de los honorarios, sin perjuicio del pago íntegro de los honorarios ya devengados" }
+      },
+      'Arriendo': {
+        'clausula-ajuste': { isFixed: false, original: "la renta se reajustará mensualmente según el IPC más un 5% adicional de interés", fixed: "la renta se reajustará semestralmente según la variación del IPC informado por el Instituto Nacional de Estadísticas" },
+        'garantia-abusiva': { isFixed: false, original: "el arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas", fixed: "la garantía será devuelta en un plazo de 30 días, descontando solo daños estructurales debidamente acreditados con facturas" }
+      },
+      'NDA': {
+        'plazo-eterno': { isFixed: false, original: "la obligación de confidencialidad será perpetua e irrevocable para todos los herederos", fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial" }
+      }
+    };
+    const resolvedType = doc.contractType || (doc.section === 'Comercial' ? 'Arriendo' : doc.section === 'Confidencialidad' ? 'NDA' : 'Honorarios');
+    setContractData(doc.data || mockTemplates[resolvedType]);
     setUploadedFile({ name: doc.name, size: 0 }); // Spoof file object
-    setContractType(doc.contractType || 'Honorarios');
+    setContractType(resolvedType);
     setAppState('dashboard');
     setActiveMenu('Auditoría Activa');
   };
 
   const navigateTo = (menuItem) => {
     setActiveMenu(menuItem);
-    if (menuItem === 'Nueva Auditoría') {
-      setAppState('upload'); 
-      setActiveAlert(null);
-      setUploadedFile(null); // Resetear contrato activo para limpiar la barra lateral
-    } else if (menuItem === 'Auditoría Activa' || menuItem === 'Dashboard') { 
+    if (menuItem === 'Auditoría Activa' || menuItem === 'Dashboard') { 
       setAppState('dashboard'); 
     } 
     else if (menuItem === 'Mis Contratos') { setAppState('mis_contratos'); } 
@@ -190,14 +200,7 @@ function App() {
         hasActiveContract={!!uploadedFile}
       />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-        {appState === 'upload' && <UploadScreen onUpload={startAnalysis} />}
-        {appState === 'analyzing' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '4px solid var(--accent-teal)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}></div>
-            <h2 style={{ marginTop: '30px', color: 'var(--text-primary)' }}>Analizando normativa chilena...</h2>
-            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
+        {/* Removed Upload/Analyzing states as requested by the user */}
         {appState === 'dashboard' && (
           <>
             <DocumentViewer onTextClick={(id) => setActiveAlert(id)} contractData={contractData} contractType={contractType} uploadedFile={uploadedFile} />
