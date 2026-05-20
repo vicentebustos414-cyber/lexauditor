@@ -32,7 +32,7 @@ const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
         <h3 style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>IA Auditoría Multimodal</h3>
       </div>
 
-      {!activeAlert ? (
+      {!activeAlert || !alertInfo ? (
         <div className="glass-panel" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>
           <ShieldAlert size={48} color="var(--text-secondary)" style={{ marginBottom: '20px', opacity: 0.3 }} />
           <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '1.1rem' }}>Auditoría en Espera</h4>

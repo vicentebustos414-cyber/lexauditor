@@ -58,6 +58,7 @@ function App() {
   };
 
   const startAnalysis = async (file, type) => {
+    setActiveAlert(null);
     setUploadedFile(file);
     setContractType(type);
     setAppState('analyzing');
@@ -144,6 +145,7 @@ function App() {
   };
 
   const openContract = (doc) => {
+    setActiveAlert(null);
     setContractData(doc.data);
     setUploadedFile({ name: doc.name, size: 0 }); // Spoof file object
     setContractType(doc.contractType || 'Honorarios');
