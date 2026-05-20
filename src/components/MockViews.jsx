@@ -5,7 +5,7 @@ import {
   AlertCircle, ShieldAlert, Zap, Copy, ChevronRight
 } from 'lucide-react';
 
-const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContract, onOpenContract, onUploadContract, onNavigate }) => {
+const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContract, onOpenContract, onUploadContract }) => {
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDocName, setNewDocName] = useState('');
@@ -163,107 +163,6 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
     <div className="animate-fade-in" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       <div className="glass-panel" style={{ padding: '50px', maxWidth: '1000px', margin: '0 auto', minHeight: '85vh' }}>
         
-        {/* Vista: Subir Contrato */}
-        {currentView === 'subir_contrato' && (
-          <div className="animate-fade-in">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '40px' }}>
-              <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '12px', borderRadius: '12px' }}><Plus size={32} color="var(--accent-teal)" /></div>
-              <div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Auditar Nuevo Contrato</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>Sube tu documento legal en PDF para escanear y auditar cláusulas críticas con Inteligencia Artificial.</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAdd} className="glass-panel glow-active animate-fade-in" style={{ padding: '40px', maxWidth: '650px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '16px' }}>
-              <h4 style={{ marginBottom: '25px', color: 'white', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.25rem', fontWeight: 600 }}><FileText size={20} color="var(--accent-teal)" /> Cargar Archivo PDF</h4>
-              
-              {/* Zona de Drag & Drop */}
-              <div 
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                style={{
-                  border: dragOver ? '2px dashed var(--accent-teal)' : '2px dashed rgba(255,255,255,0.2)',
-                  borderRadius: '12px',
-                  padding: '40px 20px',
-                  textAlign: 'center',
-                  background: dragOver ? 'rgba(14, 165, 233, 0.08)' : 'rgba(0, 0, 0, 0.2)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  marginBottom: '25px',
-                  boxShadow: dragOver ? '0 0 25px rgba(14, 165, 233, 0.15)' : 'none'
-                }}
-                onClick={() => document.getElementById('contract-file-input').click()}
-              >
-                <input 
-                  type="file" 
-                  id="contract-file-input" 
-                  accept=".pdf" 
-                  onChange={handleFileChange} 
-                  style={{ display: 'none' }} 
-                />
-                <FileText size={54} color={selectedFile ? 'var(--success-green)' : 'var(--text-secondary)'} style={{ margin: '0 auto 15px', opacity: 0.8 }} />
-                {selectedFile ? (
-                  <div>
-                    <strong style={{ color: 'var(--success-green)', display: 'block', marginBottom: '5px', fontSize: '1rem' }}>✓ Archivo Seleccionado Exitosamente</strong>
-                    <span style={{ color: 'white', fontSize: '0.9rem', wordBreak: 'break-all', display: 'block' }}>{selectedFile.name}</span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', display: 'block', marginTop: '4px' }}>({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                  </div>
-                ) : (
-                  <div>
-                    <strong style={{ color: 'white', display: 'block', marginBottom: '5px', fontSize: '1rem' }}>Arrastra tu contrato PDF aquí</strong>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>o haz clic para explorar en tu ordenador</span>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '30px' }}>
-                <div style={{ flex: 1, minWidth: '220px' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>Área / Categoría del Contrato</label>
-                  <select 
-                    value={newSectionName} 
-                    onChange={(e) => setNewSectionName(e.target.value)} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer', outline: 'none', fontSize: '0.9rem' }}
-                  >
-                    <option value="Laboral">Prestación de Servicios (Honorarios)</option>
-                    <option value="Comercial">Contrato de Arriendo</option>
-                    <option value="Confidencialidad">Acuerdo de Confidencialidad (NDA)</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, minWidth: '220px' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 500 }}>Nombre para Guardar</label>
-                  <input 
-                    value={newDocName} 
-                    onChange={(e) => setNewDocName(e.target.value)} 
-                    type="text" 
-                    placeholder="Nombre del documento..." 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', outline: 'none', fontSize: '0.9rem' }} 
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                disabled={!selectedFile && !newDocName}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '16px', fontSize: '1rem', width: '100%' }}
-              >
-                <CheckCircle2 size={20} /> {selectedFile ? 'INICIAR AUDITORÍA IA CON PDF' : 'CREAR CONTRATO SIMULADO'}
-              </button>
-            </form>
-
-            <div className="glass-panel" style={{ marginTop: '35px', padding: '25px', maxWidth: '650px', margin: '35px auto 0', display: 'flex', gap: '15px', alignItems: 'flex-start', background: 'rgba(16, 185, 129, 0.02)', border: '1px solid rgba(16, 185, 129, 0.12)' }}>
-              <span style={{ fontSize: '1.5rem' }}>🛡️</span>
-              <div>
-                <strong style={{ color: 'var(--success-green)', fontSize: '0.9rem', display: 'block', marginBottom: '5px' }}>Compromiso de Privacidad Absoluta</strong>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: '1.5', margin: 0 }}>
-                  Tus documentos legales nunca se almacenan en servidores externos de forma permanente. El procesamiento y extracción de texto se realizan de manera volátil y segura en memoria para garantizar la máxima confidencialidad.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Vista: Mis Contratos */}
         {currentView === 'mis_contratos' && (
           <div className="animate-fade-in">
@@ -272,21 +171,100 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
                 <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '12px', borderRadius: '12px' }}><FolderOpen size={32} color="var(--accent-teal)" /></div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Repositorio Legal</h1>
               </div>
-              <button onClick={() => { setSelectedFile(null); onNavigate('Subir Contrato'); }} className="btn-primary" style={{ width: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <Plus size={18} /> SUBIR CONTRATO
+              <button onClick={() => { setShowAddForm(!showAddForm); setSelectedFile(null); }} className="btn-primary" style={{ width: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Plus size={18} /> {showAddForm ? 'CERRAR PANEL' : 'NUEVO ARCHIVO'}
               </button>
             </div>
 
+            {showAddForm && (
+              <form onSubmit={handleAdd} className="glass-panel glow-active animate-fade-in" style={{ padding: '30px', marginBottom: '40px', border: '1px dashed var(--accent-teal)', background: 'rgba(14, 165, 233, 0.02)', borderRadius: '16px' }}>
+                <h4 style={{ marginBottom: '20px', color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem', fontWeight: 600 }}><Zap size={18} /> Cargar y Auditar Contrato</h4>
+                
+                {/* Zona de Drag & Drop */}
+                <div 
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  style={{
+                    border: dragOver ? '2px dashed var(--accent-teal)' : '2px dashed var(--border-color)',
+                    borderRadius: '12px',
+                    padding: '30px',
+                    textAlign: 'center',
+                    background: dragOver ? 'rgba(14, 165, 233, 0.05)' : 'rgba(0, 0, 0, 0.15)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    marginBottom: '20px'
+                  }}
+                  onClick={() => document.getElementById('contract-file-input').click()}
+                >
+                  <input 
+                    type="file" 
+                    id="contract-file-input" 
+                    accept=".pdf" 
+                    onChange={handleFileChange} 
+                    style={{ display: 'none' }} 
+                  />
+                  <FileText size={48} color={selectedFile ? 'var(--success-green)' : 'var(--text-secondary)'} style={{ margin: '0 auto 15px', opacity: 0.7 }} />
+                  {selectedFile ? (
+                    <div>
+                      <strong style={{ color: 'var(--success-green)', display: 'block', marginBottom: '5px' }}>Archivo Seleccionado:</strong>
+                      <span style={{ color: 'white', fontSize: '0.9rem' }}>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <strong style={{ color: 'white', display: 'block', marginBottom: '5px' }}>Arrastra tu contrato PDF aquí</strong>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>o haz clic para explorar en tu equipo</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Área / Categoría Legal</label>
+                    <select 
+                      value={newSectionName} 
+                      onChange={(e) => setNewSectionName(e.target.value)} 
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer', outline: 'none' }}
+                    >
+                      <option value="Laboral">Prestación de Servicios (Honorarios)</option>
+                      <option value="Comercial">Contrato de Arriendo</option>
+                      <option value="Confidencialidad">Acuerdo de Confidencialidad (NDA)</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Nombre de Documento</label>
+                    <input 
+                      value={newDocName} 
+                      onChange={(e) => setNewDocName(e.target.value)} 
+                      type="text" 
+                      placeholder="Nombre del documento..." 
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', outline: 'none' }} 
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  disabled={!selectedFile && !newDocName}
+                  style={{ marginTop: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '15px' }}
+                >
+                  <CheckCircle2 size={18} /> {selectedFile ? 'INICIAR AUDITORÍA IA CON PDF' : 'CREAR CONTRATO SIMULADO'}
+                </button>
+              </form>
+            )}
+
             {savedContracts.length === 0 ? (
-              <div className="glass-panel" style={{ textAlign: 'center', padding: '60px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>
+              <div className="glass-panel" style={{ textAlign: 'center', padding: '50px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>
                 <FolderOpen size={48} color="var(--text-secondary)" style={{ marginBottom: '20px', opacity: 0.3 }} />
                 <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '1.2rem' }}>Tu Repositorio está Vacío</h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 25px', lineHeight: '1.6' }}>
-                  No tienes contratos en tu cuenta. Haz clic en el botón de abajo para cargar un PDF e iniciar el análisis de riesgos.
-                </p>
-                <button onClick={() => onNavigate('Subir Contrato')} className="btn-primary" style={{ width: 'auto' }}>
-                  Cargar Primer PDF
-                </button>
+                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 20px', lineHeight: '1.6' }}>
+                   No tienes contratos en tu cuenta. Haz clic en "NUEVO ARCHIVO" arriba para cargar un PDF e iniciar el análisis de riesgos.
+                 </p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 15px', background: 'rgba(16, 185, 129, 0.04)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.15)', fontSize: '0.8rem', color: 'var(--success-green)' }}>
+                  <span>🔒</span>
+                  <span><strong>Privacidad 100%:</strong> Tus archivos se leen localmente y se analizan en memoria sin persistir en bases de datos externas.</span>
+                </div>
               </div>
             ) : (
               sections.map((section, idx) => (
@@ -300,7 +278,7 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
                       <div key={doc.id} className="premium-card" style={{ position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, padding: '8px 12px', background: doc.status === 'Seguro' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: doc.status === 'Seguro' ? 'var(--success-green)' : 'var(--alert-red)', fontSize: '0.7rem', fontWeight: 800, borderRadius: '0 0 0 12px', textTransform: 'uppercase' }}>{doc.status}</div>
                         <FileText size={40} color="var(--text-secondary)" style={{ marginBottom: '15px', opacity: 0.5 }} />
-                        <h4 style={{ color: 'white', marginBottom: '5px', fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '40px' }} title={doc.name}>{doc.name}</h4>
+                        <h4 style={{ color: 'white', marginBottom: '5px', fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '40px' }}>{doc.name}</h4>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>Modificado: {doc.date}</p>
                         <div style={{ display: 'flex', gap: '10px' }}>
                           <button onClick={() => onOpenContract(doc)} style={{ flex: 1, background: 'rgba(14, 165, 233, 0.1)', border: '1px solid var(--accent-teal)', color: 'var(--accent-teal)', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontWeight: 600 }}><ExternalLink size={14} /> Abrir</button>

@@ -196,7 +196,6 @@ function App() {
     if (menuItem === 'Auditoría Activa' || menuItem === 'Dashboard') { 
       setAppState('dashboard'); 
     } 
-    else if (menuItem === 'Subir Contrato') { setAppState('subir_contrato'); }
     else if (menuItem === 'Mis Contratos') { setAppState('mis_contratos'); } 
     else if (menuItem === 'Base Jurisprudencial') { setAppState('base_jurisprudencial'); } 
     else if (menuItem === 'Configuración') { setAppState('configuracion'); }
@@ -253,7 +252,7 @@ function App() {
             <CoworkerPanel activeAlert={activeAlert} onApply={handleApplyAmendment} contractData={contractData} />
           </>
         )}
-        {(appState === 'mis_contratos' || appState === 'subir_contrato' || appState === 'base_jurisprudencial' || appState === 'configuracion') && (
+        {(appState === 'mis_contratos' || appState === 'base_jurisprudencial' || appState === 'configuracion') && (
           <MockViews 
             currentView={appState} 
             savedContracts={currentContracts} 
@@ -261,7 +260,6 @@ function App() {
             onAddContract={addContract}
             onOpenContract={openContract}
             onUploadContract={startAnalysis}
-            onNavigate={navigateTo}
           />
         )}
       </div>
