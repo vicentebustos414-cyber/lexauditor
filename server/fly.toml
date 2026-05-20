@@ -1,0 +1,12 @@
+# fly.toml file generated for LexAuditorChile backend
+
+app = "lexauditorchile-backend"
+primary_region = "scl" # Región de Santiago, Chile para menor latencia
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
