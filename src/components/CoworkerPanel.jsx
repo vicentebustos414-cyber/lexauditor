@@ -2,10 +2,12 @@ import React from 'react';
 import { AlertTriangle, ShieldAlert, FileEdit, CheckCircle2, Bot, Info } from 'lucide-react';
 
 const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
+  const safeContractData = contractData || {};
+  
   const getAlertData = () => {
-    if (!activeAlert || !contractData[activeAlert]) return null;
+    if (!activeAlert || !safeContractData[activeAlert]) return null;
     
-    const data = contractData[activeAlert];
+    const data = safeContractData[activeAlert];
     let type = 'warning';
     let title = 'Riesgo Detectado';
     let agent = 'SUBAGENTE 2: RIESGOS';

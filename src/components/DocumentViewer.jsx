@@ -85,6 +85,7 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
   };
 
   const renderContent = () => {
+    const safeContractData = contractData || {};
     if (contractType === 'Arriendo') {
       return (
         <div style={{ fontSize: '1.05rem', lineHeight: '2', color: '#cbd5e1' }}>
@@ -92,21 +93,21 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
           <p style={{ marginBottom: '25px' }}><strong>PRIMERO:</strong> El inmueble se entrega en condiciones óptimas de habitabilidad.</p>
           <p style={{ marginBottom: '25px' }}>
             <strong>SEGUNDO (Renta):</strong> La renta de arrendamiento será de $500.000 mensuales. 
-            {!contractData['clausula-ajuste']?.isFixed ? (
-              <span className="highlight-yellow" onClick={() => onTextClick('clausula-ajuste')}>{contractData['clausula-ajuste']?.original}</span>
+            {!safeContractData['clausula-ajuste']?.isFixed ? (
+              <span className="highlight-yellow" onClick={() => onTextClick('clausula-ajuste')}>{safeContractData['clausula-ajuste']?.original}</span>
             ) : (
               <span style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <CheckCircle size={14} /> {contractData['clausula-ajuste']?.fixed}
+                <CheckCircle size={14} /> {safeContractData['clausula-ajuste']?.fixed}
               </span>
             )}
           </p>
           <p style={{ marginBottom: '25px' }}>
             <strong>TERCERO (Garantía):</strong> Se entrega un mes de garantía. 
-            {!contractData['garantia-abusiva']?.isFixed ? (
-              <span className="highlight-red" onClick={() => onTextClick('garantia-abusiva')}>{contractData['garantia-abusiva']?.original}</span>
+            {!safeContractData['garantia-abusiva']?.isFixed ? (
+              <span className="highlight-red" onClick={() => onTextClick('garantia-abusiva')}>{safeContractData['garantia-abusiva']?.original}</span>
             ) : (
               <span style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <CheckCircle size={14} /> {contractData['garantia-abusiva']?.fixed}
+                <CheckCircle size={14} /> {safeContractData['garantia-abusiva']?.fixed}
               </span>
             )}
           </p>
@@ -119,11 +120,11 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
           <p style={{ marginBottom: '25px' }}>Las Partes se obligan a mantener estricta reserva sobre toda la información intercambiada...</p>
           <p style={{ marginBottom: '25px' }}>
             <strong>CLÁUSULA QUINTA (Vigencia):</strong> 
-            {!contractData['plazo-eterno']?.isFixed ? (
-              <span className="highlight-red" onClick={() => onTextClick('plazo-eterno')}>{contractData['plazo-eterno']?.original}</span>
+            {!safeContractData['plazo-eterno']?.isFixed ? (
+              <span className="highlight-red" onClick={() => onTextClick('plazo-eterno')}>{safeContractData['plazo-eterno']?.original}</span>
             ) : (
               <span style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <CheckCircle size={14} /> {contractData['plazo-eterno']?.fixed}
+                <CheckCircle size={14} /> {safeContractData['plazo-eterno']?.fixed}
               </span>
             )}
           </p>
@@ -138,11 +139,11 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
 
         <p style={{ marginBottom: '25px', transition: 'all 0.5s' }}>
           <strong>TERCERO:</strong> El prestador de servicios deberá cumplir con sus labores, 
-          {!contractData['riesgo-subordinacion']?.isFixed ? (
-            <span className="highlight-yellow" onClick={() => onTextClick('riesgo-subordinacion')} title="Riesgo Legal - Clic para ver">{contractData['riesgo-subordinacion']?.original}</span>
+          {!safeContractData['riesgo-subordinacion']?.isFixed ? (
+            <span className="highlight-yellow" onClick={() => onTextClick('riesgo-subordinacion')} title="Riesgo Legal - Clic para ver">{safeContractData['riesgo-subordinacion']?.original}</span>
           ) : (
             <span style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle size={14} /> {contractData['riesgo-subordinacion']?.fixed}
+              <CheckCircle size={14} /> {safeContractData['riesgo-subordinacion']?.fixed}
             </span>
           )}
           , debiendo reportar avances según se acuerde.
@@ -152,11 +153,11 @@ const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile 
 
         <p style={{ marginBottom: '25px', transition: 'all 0.5s' }}>
           <strong>SÉPTIMO:</strong> En caso de término anticipado del presente contrato, 
-          {!contractData['ilegal-retencion']?.isFixed ? (
-            <span className="highlight-red" onClick={() => onTextClick('ilegal-retencion')} title="Ilegalidad Detectada - Clic para ver">{contractData['ilegal-retencion']?.original}</span>
+          {!safeContractData['ilegal-retencion']?.isFixed ? (
+            <span className="highlight-red" onClick={() => onTextClick('ilegal-retencion')} title="Ilegalidad Detectada - Clic para ver">{safeContractData['ilegal-retencion']?.original}</span>
           ) : (
             <span style={{ color: 'var(--success-green)', backgroundColor: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px dashed var(--success-green)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle size={14} /> {contractData['ilegal-retencion']?.fixed}
+              <CheckCircle size={14} /> {safeContractData['ilegal-retencion']?.fixed}
             </span>
           )}
           .
