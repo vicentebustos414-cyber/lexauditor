@@ -22,6 +22,9 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
   const [lastUpdate, setLastUpdate] = useState("Hoy a las 03:00 AM");
 
   const [dragOver, setDragOver] = useState(false);
+  
+  const [filterTribunal, setFilterTribunal] = useState('Todos');
+  const [filterMateria, setFilterMateria] = useState('Todos');
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -91,13 +94,25 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
       const response = await fetch(`${apiUrl}/api/jurisprudencia/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery })
+        body: JSON.stringify({ 
+          query: searchQuery,
+          tribunal: filterTribunal,
+          materia: filterMateria
+        })
       });
       if (!response.ok) {
         throw new Error('Error al conectar con el motor de jurisprudencia');
       }
       const data = await response.json();
-      setSearchResults(data.results || []);
+      let apiResults = data.results || [];
+      // Aplicar filtros a nivel de cliente por robustez
+      if (filterTribunal !== 'Todos') {
+        apiResults = apiResults.filter(item => item.tribunal.includes(filterTribunal));
+      }
+      if (filterMateria !== 'Todos') {
+        apiResults = apiResults.filter(item => item.materia.includes(filterMateria));
+      }
+      setSearchResults(apiResults);
     } catch (err) {
       console.error('Error buscando jurisprudencia:', err);
       // Fallback a simulación local estructurada
@@ -208,6 +223,14 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
         // En cualquier otro caso, inyectar un surtido de 3 sentencias emblemáticas
         filtered = [allDatabase[0], allDatabase[3], allDatabase[6]];
       }
+    }
+
+    // Aplicar filtros de selección a nivel local
+    if (filterTribunal !== 'Todos') {
+      filtered = filtered.filter(item => item.tribunal.toLowerCase().includes(filterTribunal.toLowerCase()));
+    }
+    if (filterMateria !== 'Todos') {
+      filtered = filtered.filter(item => item.materia.toLowerCase().includes(filterMateria.toLowerCase()));
     }
 
     setSearchResults(filtered);
@@ -402,6 +425,51 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
                 />
               </div>
               <button onClick={handleSearch} className="btn-primary" style={{ width: 'auto', padding: '0 30px' }}>BUSCAR</button>
+            </div>
+
+            {/* Panel de Filtros Avanzados (Tribunal y Materia) */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '15px', 
+              marginBottom: '20px', 
+              padding: '15px 20px', 
+              background: 'rgba(255, 255, 255, 0.02)', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tribunal del Fallo</label>
+                <select 
+                  value={filterTribunal} 
+                  onChange={(e) => {
+                    setFilterTribunal(e.target.value);
+                  }} 
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer', outline: 'none', fontSize: '0.85rem' }}
+                >
+                  <option value="Todos">Todos los Tribunales</option>
+                  <option value="Corte Suprema">Corte Suprema</option>
+                  <option value="Santiago">Corte de Apelaciones de Santiago</option>
+                  <option value="San Miguel">Corte de Apelaciones de San Miguel</option>
+                </select>
+              </div>
+
+              <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Área / Materia del Derecho</label>
+                <select 
+                  value={filterMateria} 
+                  onChange={(e) => {
+                    setFilterMateria(e.target.value);
+                  }} 
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer', outline: 'none', fontSize: '0.85rem' }}
+                >
+                  <option value="Todos">Todas las Materias</option>
+                  <option value="Laboral">Laboral (Previsión, Tutela, Honorarios)</option>
+                  <option value="Civil">Civil (Arrendamientos, Cláusulas Penales)</option>
+                  <option value="Comercial">Comercial (NDA, Confidencialidad)</option>
+                  <option value="Consumidor">Consumidor (Ley 19.496)</option>
+                </select>
+              </div>
             </div>
 
             <div style={{ marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', background: 'rgba(14, 165, 233, 0.04)', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.15)', fontSize: '0.8rem', color: '#cbd5e1' }}>
