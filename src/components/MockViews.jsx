@@ -955,7 +955,7 @@ Se acoge la excepción de reducción de cláusula penal por lesión enorme. Se r
             }}>
               <span style={{ fontSize: '1.2rem', display: 'inline-flex', alignSelf: 'center' }}>🟢</span>
               <span>
-                <strong>LexAuditor Index:</strong> Conectado a la Base de Datos Virtual de Precedentes Judiciales de Chile (<strong>1,000,000+ causas</strong> indexadas de forma determinista y libre de alucinaciones).
+                <strong>LexAuditor Index:</strong> Conectado a la Base de Datos Virtual de Precedentes Judiciales de Chile (de forma determinista y libre de alucinaciones).
               </span>
             </div>
 
