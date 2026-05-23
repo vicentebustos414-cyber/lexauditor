@@ -5,6 +5,14 @@ import {
   AlertCircle, ShieldAlert, Zap, Copy, ChevronRight
 } from 'lucide-react';
 
+const getApiUrl = () => {
+  try {
+    return localStorage.getItem('lexauditor_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  } catch (e) {
+    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  }
+};
+
 const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContract, onOpenContract, onUploadContract }) => {
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -25,6 +33,10 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
   
   const [filterTribunal, setFilterTribunal] = useState('Todos');
   const [filterMateria, setFilterMateria] = useState('Todos');
+
+  const [tempApiUrl, setTempApiUrl] = useState(() => getApiUrl());
+  const [connectionStatus, setConnectionStatus] = useState('unknown'); 
+  const [connectionDetails, setConnectionDetails] = useState('');
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -90,7 +102,7 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
     setIsSearching(true); 
     setSearchResults(null);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/jurisprudencia/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,6 +264,31 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
       if (i < logs.length) { setSyncLogs(prev => [...prev, logs[i]]); i++; } 
       else { clearInterval(interval); setIsSyncing(false); setLastUpdate("Recién actualizado"); }
     }, 1000);
+  };
+
+  const testConnection = async () => {
+    setConnectionStatus('testing');
+    setConnectionDetails('Verificando ruta del servidor...');
+    try {
+      const cleanUrl = tempApiUrl.trim().replace(/\/$/, '');
+      const response = await fetch(`${cleanUrl}/api/health`, { method: 'GET' });
+      if (response.ok) {
+        const data = await response.json();
+        setConnectionStatus('connected');
+        setConnectionDetails(`¡Conexión establecida con éxito! Servidor en línea. Integración de IA: ${data.apiConfigured ? 'Gemini 1.5 Activa' : 'Simulador Integrado'}`);
+      } else {
+        throw new Error('Servidor respondió con código de error');
+      }
+    } catch (e) {
+      setConnectionStatus('failed');
+      setConnectionDetails('Error al conectar con la API. Asegúrese de ingresar una URL válida en vivo y que el servicio de backend no esté suspendido en Render.');
+    }
+  };
+
+  const saveServerSettings = () => {
+    const cleanUrl = tempApiUrl.trim().replace(/\/$/, '');
+    localStorage.setItem('lexauditor_api_url', cleanUrl);
+    alert('Configuración del servidor guardada con éxito.');
   };
 
   const sections = [...new Set(savedContracts.map(c => c.section))];
@@ -561,8 +598,73 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
                       {isSyncing && <div style={{ width: '8px', height: '15px', background: '#0f0', display: 'inline-block', animation: 'blink 1s infinite' }}></div>}
                    </div>
                 </div>
-             </div>
-          </div>
+
+                {/* Nueva sección: Configuración de la Conexión con el Servidor API */}
+                <div className="glass-panel" style={{ padding: '30px' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                      <h4 style={{ fontSize: '1.2rem', color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: '10px' }}><Settings size={24} /> Servidor de Inteligencia Artificial (API)</h4>
+                      <span style={{ 
+                        fontSize: '0.8rem', 
+                        padding: '4px 10px', 
+                        borderRadius: '20px', 
+                        background: connectionStatus === 'connected' ? 'rgba(16,185,129,0.1)' : connectionStatus === 'failed' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)', 
+                        color: connectionStatus === 'connected' ? 'var(--success-green)' : connectionStatus === 'failed' ? 'var(--alert-red)' : 'var(--text-secondary)',
+                        fontWeight: 600
+                      }}>
+                        {connectionStatus === 'connected' ? 'Servidor Conectado' : connectionStatus === 'failed' ? 'Servidor Desconectado' : 'Sin Verificar'}
+                      </span>
+                   </div>
+                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.6' }}>
+                      Debido a que empaquetamos el frontend en un contenedor Docker estático Nginx, las variables de entorno de producción no se pueden inyectar dinámicamente en tiempo de ejecución. 
+                      Ingresa aquí la <strong>URL del servidor backend (API) de Render</strong> para activar el análisis real de PDFs y chat con IA.
+                   </p>
+                   
+                   <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Dirección URL de tu Backend (API) de Render</label>
+                      <input 
+                         value={tempApiUrl}
+                         onChange={(e) => setTempApiUrl(e.target.value)}
+                         type="text" 
+                         placeholder="Ej: https://lexauditor-backend.onrender.com" 
+                         style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', outline: 'none', fontSize: '0.9rem' }} 
+                      />
+                   </div>
+
+                   {connectionDetails && (
+                      <div style={{ 
+                        padding: '12px 15px', 
+                        borderRadius: '8px', 
+                        background: connectionStatus === 'connected' ? 'rgba(16,185,129,0.05)' : connectionStatus === 'failed' ? 'rgba(239,68,68,0.05)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${connectionStatus === 'connected' ? 'rgba(16,185,129,0.2)' : connectionStatus === 'failed' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                        fontSize: '0.85rem',
+                        color: connectionStatus === 'connected' ? '#cbd5e1' : connectionStatus === 'failed' ? '#cbd5e1' : 'var(--text-secondary)',
+                        marginBottom: '20px',
+                        lineHeight: '1.5'
+                      }}>
+                         {connectionDetails}
+                      </div>
+                   )}
+
+                   <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                      <button 
+                         className="btn-primary" 
+                         onClick={testConnection} 
+                         disabled={connectionStatus === 'testing'}
+                         style={{ width: 'auto', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: 'white' }}
+                      >
+                         {connectionStatus === 'testing' ? 'Verificando...' : 'PROBAR CONEXIÓN'}
+                      </button>
+                      <button 
+                         className="btn-primary" 
+                         onClick={saveServerSettings} 
+                         style={{ width: 'auto' }}
+                      >
+                         GUARDAR CONFIGURACIÓN
+                      </button>
+                    </div>
+                 </div>
+              </div>
+           </div>
         )}
 
       </div>

@@ -6,6 +6,14 @@ import MockViews from './components/MockViews';
 import LoginScreen from './components/LoginScreen';
 import './index.css';
 
+const getApiUrl = () => {
+  try {
+    return localStorage.getItem('lexauditor_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  } catch (e) {
+    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  }
+};
+
 function App() {
   const [appState, setAppState] = useState('login'); 
   const [activeAlert, setActiveAlert] = useState(null);
@@ -77,7 +85,7 @@ function App() {
       formData.append('file', file);
       formData.append('contractType', type);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/audit`, {
         method: 'POST',
         body: formData,

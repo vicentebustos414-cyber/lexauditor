@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Languages, X, Move, MessageSquare, ArrowUp, PenTool, FileText } from 'lucide-react';
 
+const getApiUrl = () => {
+  try {
+    return localStorage.getItem('lexauditor_api_url') || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  } catch (e) {
+    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  }
+};
+
 const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile }) => {
   const [showTranslator, setShowTranslator] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -95,7 +103,7 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
     setChatMessages(prev => [...prev, { role: 'ai', text: 'Escribiendo respuesta...', isTyping: true }]);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
