@@ -201,7 +201,7 @@ Para cada fallo o sentencia, debes proveer los siguientes datos:
 4. "materia": Materia del derecho específica (Civil, Penal, Laboral, Familia, Comercial, Constitucional, etc.).
 5. "extracto": Un extracto corto de la decisión o doctrina principal.
 6. "sintesis": Una síntesis jurídica detallada que explique la doctrina establecida en el fallo y su impacto para las personas interesadas.
-7. "url": Un enlace a Google estructurado para encontrar el caso específico en el dominio pjud.cl de la siguiente forma exacta: "https://www.google.com/search?q=site:pjud.cl+%22Rol+XXXXX-YYYY%22" (reemplazando XXXXX y YYYY por los números y año correspondientes al Rol).
+7. "url": Un enlace a Google estructurado para encontrar el caso específico en el dominio de jurisprudencia del pjud.cl de la siguiente forma exacta: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%22XXXXX-YYYY%22+filetype:pdf" (reemplazando XXXXX-YYYY por el número y año correspondiente al Rol sin espacios ni letras, ej. "8922-2021"). Esto garantiza que el primer resultado de Google abra directamente el archivo PDF oficial de la sentencia en el servidor del Poder Judicial.
 
 Genera una respuesta en formato JSON con la siguiente estructura:
 {
@@ -474,69 +474,105 @@ function getSurroundingSentence(text, matchStr) {
 function simulateJurisprudenciaResponse(query, res) {
   const normalized = query.toLowerCase();
   
-  let results = [];
-  
-  if (normalized.includes('laboral') || normalized.includes('honorarios') || normalized.includes('subordinacion') || normalized.includes('despido')) {
-    results = [
-      {
-        rol: "Rol N° 23.456-2022",
-        tribunal: "Corte Suprema",
-        fecha: "2023",
-        materia: "Laboral",
-        extracto: "...la subordinación se configura ante la existencia de controles horarios y supervisión jerárquica constante, declarando la existencia de contrato de trabajo en prestador de servicios a honorarios del sector municipal...",
-        sintesis: "Sentencia hito que ratifica la doctrina del principio de primacía de la realidad. Si un prestador de servicios a honorarios realiza funciones habituales bajo subordinación y dependencia (horario fijo, oficina provista, reporte directo), se le reconocen los derechos del Código del Trabajo, ordenando el pago de cotizaciones previsionales retroactivas.",
-        url: 'https://www.google.com/search?q=site:pjud.cl+%22Rol+23456-2022%22'
-      },
-      {
-        rol: "Rol N° 11.021-2020",
-        tribunal: "Corte Suprema",
-        fecha: "2020",
-        materia: "Laboral",
-        extracto: "...las cotizaciones previsionales de seguridad social deben ser pagadas de forma retroactiva por el empleador una vez declarada la relación laboral de subordinación bajo honorarios...",
-        sintesis: "La Corte Suprema establece que, al reconocerse judicialmente una relación laboral que simuló ser a honorarios, la empresa o institución debe pagar todas las cotizaciones de pensión y salud devengadas durante la vigencia del contrato, más multas e intereses.",
-        url: 'https://www.google.com/search?q=site:pjud.cl+%22Rol+11021-2020%22'
-      }
-    ];
-  } else if (normalized.includes('arriendo') || normalized.includes('alquiler') || normalized.includes('garantia') || normalized.includes('desahucio')) {
-    results = [
-      {
-        rol: "Rol N° 8.922-2021",
-        tribunal: "Corte Suprema",
-        fecha: "2021",
-        materia: "Civil (Arrendamiento)",
-        extracto: "...el mes de garantía no puede ser retenido unilateralmente por el arrendador bajo el mero supuesto de daños no justificados, requiriendo acreditación real de los gastos de reparación...",
-        sintesis: "Fallo que establece la carga de la prueba sobre el arrendador para retener el mes de garantía. La retención arbitraria constituye un incumplimiento de contrato por parte del arrendador, quien está obligado a restituir el dinero a menos que presente presupuestos técnicos y facturas que demuestren daños estructurales extraordinarios imputables al arrendatario.",
-        url: 'https://www.google.com/search?q=site:pjud.cl+%22Rol+8922-2021%22'
-      }
-    ];
-  } else if (normalized.includes('penal') || normalized.includes('delito') || normalized.includes('estafa') || normalized.includes('hurto')) {
-    results = [
-      {
-        rol: "Rol N° 12.540-2023",
-        tribunal: "Corte Suprema",
-        fecha: "2023",
-        materia: "Penal",
-        extracto: "...el engaño en la estafa civil vs estafa penal se distingue por la maquinación y ardid empleado para provocar el error en el patrimonio de la víctima...",
-        sintesis: "Sentencia que delimita la frontera entre el mero incumplimiento contractual civil y el delito de estafa penal. Establece que la estafa requiere de una puesta en escena o maquinación engañosa previa y determinante, sin la cual el negocio jurídico no se habría celebrado.",
-        url: 'https://www.google.com/search?q=site:pjud.cl+%22Rol+12540-2023%22'
-      }
-    ];
-  } else {
-    // Respuesta genérica adaptada a la búsqueda de cualquier ámbito de derecho
-    results = [
-      {
-        rol: "Rol N° 45.109-2022",
-        tribunal: "Corte Suprema",
-        fecha: "2022",
-        materia: "General",
-        extracto: `Jurisprudencia general sobre ${query}. Sentencia que establece la interpretación de las cláusulas conforme a la intención de los contratantes y la buena fe objetiva.`,
-        sintesis: `Fallo relevante que interpreta las obligaciones nacidas del acto jurídico en relación a la consulta: "${query}". El tribunal concluye que la buena fe objetiva (art. 1546 Código Civil) obliga a las partes no solo a lo que está expresamente pactado, sino a todo lo que emana precisamente de la naturaleza de la obligación.`,
-        url: `https://www.google.com/search?q=site:pjud.cl+%22Rol+45109-2022%22`
-      }
-    ];
+  const allDatabase = [
+    {
+      rol: "Rol N° 19.824-2018",
+      tribunal: "Corte Suprema (Unificación de Doctrina)",
+      fecha: "2019",
+      materia: "Laboral",
+      extracto: "...la contratación a honorarios en la administración pública o empresas privadas no obsta al reconocimiento de una relación laboral bajo el Código del Trabajo si concurren de forma habitual los indicios del Art. 7 (horario, dependencia, órdenes directas)...",
+      sintesis: "Sentencia hito de Unificación de Doctrina que ratifica el principio de primacía de la realidad. Si un prestador de servicios a honorarios realiza funciones ordinarias bajo subordinación y dependencia directa, se le reconocen todos los derechos laborales y cotizaciones previsionales de forma retroactiva.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2219824-2018%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 32.115-2020",
+      tribunal: "Corte de Apelaciones de Santiago",
+      fecha: "2021",
+      materia: "Laboral",
+      extracto: "...el no pago oportuno de las cotizaciones previsionales por parte del empleador constituye un incumplimiento grave de las obligaciones que impone el contrato, facultando al trabajador a poner término al mismo mediante el autodespido...",
+      sintesis: "Sentencia que acoge demanda por despido indirecto (autodespido) fundado en mora previsional reiterada. Condena al empleador al pago íntegro de las indemnizaciones por años de servicio y aviso previo con un recargo del 50%.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2232115-2020%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 78.432-2023",
+      tribunal: "Corte Suprema",
+      fecha: "2023",
+      materia: "Laboral (Tutela)",
+      extracto: "...el empleador está obligado a adoptar todas las medidas necesarias para proteger eficazmente la vida y salud de los trabajadores, incluyendo su integridad psíquica frente a conductas de acoso u hostigamiento laboral...",
+      sintesis: "Acoge tutela laboral por acoso laboral (mobbing) sistemático de un supervisor. Condena al empleador al pago de una indemnización por daño moral equivalente a 11 meses de remuneración previsional al acreditarse la afectación de salud mental.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2278432-2023%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 15.430-2022",
+      tribunal: "Corte Suprema",
+      fecha: "2022",
+      materia: "Civil (Arrendamiento)",
+      extracto: "...el mes de garantía tiene por objeto exclusivo caucionar la entrega del inmueble en el mismo estado de conservación y responder de daños extraordinarios causados por el arrendatario, requiriéndose presupuestos y facturas reales para efectuar descuentos...",
+      sintesis: "Declara que la retención unilateral o injustificada del mes de garantía por parte del arrendador bajo conceptos vagos de daños menores es abusiva. El arrendador queda obligado a restituir la suma total a menos que acredite judicialmente los desembolsos reales mediante facturas.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2215430-2022%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 45.109-2022",
+      tribunal: "Corte Suprema",
+      fecha: "2023",
+      materia: "Civil (Contratos)",
+      extracto: "...las cláusulas que establecen reajustes automáticos mensuales de la renta en base al IPC sumado a tasas de interés complementarias atentan contra el principio de buena fe contractual y configuran un enriquecimiento sin causa...",
+      sintesis: "Declara nulas las cláusulas de reajuste usureras en contratos de arrendamiento de adhesión, decretando que el reajuste debe calcularse exclusivamente según la variación semestral del IPC informado por el INE sin recargos adicionales.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2245109-2022%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 12.876-2021",
+      tribunal: "Corte de Apelaciones de San Miguel",
+      fecha: "2022",
+      materia: "Comercial (NDA)",
+      extracto: "...establecer una obligación de confidencialidad de carácter perpetuo sobre información mercantil general constituye una limitación desproporcionada que restringe de forma arbitraria la libertad de trabajo y la libre competencia...",
+      sintesis: "Acoge la nulidad parcial de un acuerdo de confidencialidad (NDA) al imponer reserva perpetua sobre ex-colaboradores. Determina que el plazo de resguardo comercial razonable se limita a un máximo de 5 años desde el término de la relación comercial.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2212876-2021%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 3.421-2023",
+      tribunal: "Corte Suprema",
+      fecha: "2023",
+      materia: "Consumidor (Ley 19.496)",
+      extracto: "...las cláusulas contenidas en contratos de adhesión que imponen al consumidor multas desproporcionadas a todo evento, o facultan a la empresa proveedora a modificar unilateralmente los términos contratados son abusivas y nulas de pleno derecho...",
+      sintesis: "Sentencia masiva que sanciona cláusulas de exención de responsabilidad civil en contratos de adhesión. Confirma que toda cláusula que limite la libre facultad de compensación o reclamo de los consumidores viola la ley 19.496.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%223421-2023%22+filetype:pdf"
+    },
+    {
+      rol: "Rol N° 56.789-2022",
+      tribunal: "Corte Suprema",
+      fecha: "2022",
+      materia: "Civil (Obligaciones)",
+      extracto: "...el artículo 1544 del Código Civil faculta expresamente a los tribunales a moderar y reducir una cláusula penal cuando esta resulta ser enormemente desproporcionada o supera el doble de la obligación principal, evitando el abuso de derecho...",
+      sintesis: "Establece doctrina y jurisprudencia contra el abuso de cláusulas punitivas leoninas, facultando a los magistrados a reducir multas desmedidas de contratos al 10% del total de la obligación principal.",
+      url: "https://www.google.com/search?q=site:jurisprudencia.pjud.cl+%2256789-2022%22+filetype:pdf"
+    }
+  ];
+
+  // Filtrar por palabras clave
+  let filtered = allDatabase.filter(item => {
+    return (
+      item.rol.toLowerCase().includes(normalized) ||
+      item.materia.toLowerCase().includes(normalized) ||
+      item.tribunal.toLowerCase().includes(normalized) ||
+      item.extracto.toLowerCase().includes(normalized) ||
+      item.sintesis.toLowerCase().includes(normalized)
+    );
+  });
+
+  if (filtered.length === 0) {
+    if (normalized.includes('arriendo') || normalized.includes('garantia') || normalized.includes('reajuste') || normalized.includes('ipc') || normalized.includes('alquiler') || normalized.includes('casa')) {
+      filtered = allDatabase.filter(item => item.materia.includes('Arrendamiento') || item.materia.includes('Contratos'));
+    } else if (normalized.includes('laboral') || normalized.includes('honorarios') || normalized.includes('despido') || normalized.includes('previsional') || normalized.includes('tutela') || normalized.includes('trabajador')) {
+      filtered = allDatabase.filter(item => item.materia.includes('Laboral'));
+    } else if (normalized.includes('confidencialidad') || normalized.includes('nda') || normalized.includes('reserva') || normalized.includes('patente')) {
+      filtered = allDatabase.filter(item => item.materia.includes('NDA'));
+    } else {
+      filtered = [allDatabase[0], allDatabase[3], allDatabase[6]];
+    }
   }
 
-  return res.json({ results });
+  return res.json({ results: filtered });
 }
 
 // Endpoint del chat legal inteligente
