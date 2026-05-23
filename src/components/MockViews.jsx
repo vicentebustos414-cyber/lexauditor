@@ -315,7 +315,7 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
               </a>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '35px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '15px' }}>
               <div style={{ flex: 1, position: 'relative' }}>
                 <Search size={20} color="var(--text-secondary)" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input 
@@ -328,6 +328,13 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
                 />
               </div>
               <button onClick={handleSearch} className="btn-primary" style={{ width: 'auto', padding: '0 30px' }}>BUSCAR</button>
+            </div>
+
+            <div style={{ marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 15px', background: 'rgba(14, 165, 233, 0.04)', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.15)', fontSize: '0.8rem', color: '#cbd5e1' }}>
+              <span style={{ fontSize: '1.1rem' }}>💡</span>
+              <span>
+                <strong>Acceso Directo al PJUD:</strong> Debido a que el portal del Poder Judicial chileno bloquea los enlaces directos externos por control de sesión, nuestro buscador genera una <strong>Búsqueda Indexada Inteligente</strong>. Al hacer clic en <em>"Ver en PJUD"</em>, el primer enlace en pantalla te abrirá directamente la sentencia o PDF oficial en el servidor de la Corte.
+              </span>
             </div>
 
             {isSearching && (
