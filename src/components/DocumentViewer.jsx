@@ -388,7 +388,13 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <FileText color="var(--accent-teal)" size={28} />
             <div>
-              <h1 style={{ fontSize: '1.3rem', fontWeight: 600 }}>{contractType === 'Honorarios' ? 'CONTRATO DE PRESTACIÓN DE SERVICIOS' : contractType === 'Arriendo' ? 'CONTRATO DE ARRENDAMIENTO' : 'ACUERDO DE CONFIDENCIALIDAD'}</h1>
+              <h1 style={{ fontSize: '1.3rem', fontWeight: 600 }}>{
+                contractType === 'Honorarios' ? 'CONTRATO DE PRESTACIÓN DE SERVICIOS' : 
+                contractType === 'Arriendo' ? 'CONTRATO DE ARRENDAMIENTO' : 
+                contractType === 'NDA' ? 'ACUERDO DE CONFIDENCIALIDAD' : 
+                contractType === 'Penal' ? 'EXPEDIENTE / DOCUMENTO PENAL' : 
+                'DOCUMENTO LEGAL / ACADÉMICO'
+              }</h1>
               {uploadedFile && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Archivo: {uploadedFile.name}</span>}
             </div>
           </div>
@@ -578,7 +584,13 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '35px', background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', color: '#000000' }}>
               <div>
                 <p style={{ margin: '0 0 8px 0' }}><strong>Documento Auditado:</strong> {uploadedFile ? uploadedFile.name : 'Contrato Legal Simulado'}</p>
-                <p style={{ margin: '0 0 8px 0' }}><strong>Tipo de Contrato:</strong> {contractType === 'Honorarios' ? 'Prestación de Servicios (Honorarios)' : contractType === 'Arriendo' ? 'Contrato de Arrendamiento' : 'Acuerdo de Confidencialidad (NDA)'}</p>
+                <p style={{ margin: '0 0 8px 0' }}><strong>Tipo de Contrato:</strong> {
+                  contractType === 'Honorarios' ? 'Prestación de Servicios (Honorarios)' : 
+                  contractType === 'Arriendo' ? 'Contrato de Arrendamiento' : 
+                  contractType === 'NDA' ? 'Acuerdo de Confidencialidad (NDA)' : 
+                  contractType === 'Penal' ? 'Causa / Escrito Penal' : 
+                  'Documento General / Académico'
+                }</p>
                 <p style={{ margin: 0 }}><strong>Legislación Aplicada:</strong> República de Chile (Código Civil / Trabajo / Ley 19.496)</p>
               </div>
               <div>
