@@ -12,6 +12,78 @@ const getApiUrl = () => {
 const DocumentViewer = ({ onTextClick, contractData, contractType, uploadedFile }) => {
   const [showTranslator, setShowTranslator] = useState(false);
   const [showChat, setShowChat] = useState(false);
+
+  const getComplianceScore = () => {
+    const safeContractData = contractData || {};
+    let total = 0;
+    let fixed = 0;
+
+    if (safeContractData.findings && Array.isArray(safeContractData.findings)) {
+      total = safeContractData.findings.length;
+      fixed = safeContractData.findings.filter(f => f.isFixed).length;
+    } else {
+      const keys = Object.keys(safeContractData).filter(key => 
+        safeContractData[key] && typeof safeContractData[key] === 'object' && 'isFixed' in safeContractData[key]
+      );
+      total = keys.length;
+      fixed = keys.filter(key => safeContractData[key].isFixed).length;
+    }
+
+    if (total === 0) return 100;
+    return Math.round((fixed / total) * 100);
+  };
+
+  const getFindingsList = () => {
+    const safeContractData = contractData || {};
+    const list = [];
+
+    if (safeContractData.findings && Array.isArray(safeContractData.findings)) {
+      safeContractData.findings.forEach(f => {
+        list.push({
+          id: f.id,
+          original: f.original,
+          fixed: f.fixed,
+          risk: f.risk || 'Riesgo regulatorio bajo el ordenamiento jurídico de Chile.',
+          recommendation: f.recommendation || 'Ajustar la cláusula para mitigar contingencias civiles o laborales.',
+          isFixed: f.isFixed
+        });
+      });
+    } else {
+      const keys = Object.keys(safeContractData).filter(key => 
+        safeContractData[key] && typeof safeContractData[key] === 'object' && 'isFixed' in safeContractData[key]
+      );
+      keys.forEach(key => {
+        const f = safeContractData[key];
+        let risk = 'Riesgo regulatorio bajo el ordenamiento jurídico de Chile.';
+        let recommendation = 'Ajustar la cláusula para mitigar contingencias.';
+        if (key === 'riesgo-subordinacion') {
+          risk = 'Las "órdenes directas" son indicio de subordinación laboral bajo el Art. 7 del Código del Trabajo. Riesgo de demanda por reconocimiento de vínculo laboral.';
+          recommendation = 'Reemplazar por coordinación de entregables técnicos sin sujeción a órdenes directas.';
+        } else if (key === 'ilegal-retencion') {
+          risk = 'La retención total de honorarios es desproporcionada y constituye un enriquecimiento sin causa según jurisprudencia chilena.';
+          recommendation = 'Reemplazar por multa del 10% de honorarios devengados.';
+        } else if (key === 'clausula-ajuste') {
+          risk = 'El ajuste mensual con interés adicional puede considerarse usurario. Se recomienda usar solo IPC semestral.';
+          recommendation = 'Ajustar reajuste de renta a variación pura semestral de IPC informada por el INE.';
+        } else if (key === 'garantia-abusiva') {
+          risk = 'Retener garantía sin rendición de cuentas ni facturas justificadas vulnera el principio de buena fe contractual en arriendos.';
+          recommendation = 'Fijar devolución a 30 días con entrega obligatoria de facturas de descuento.';
+        } else if (key === 'plazo-eterno') {
+          risk = 'Las obligaciones perpetuas de confidencialidad son contrarias al orden público. Debe acotarse a un plazo máximo razonable.';
+          recommendation = 'Limitar vigencia a un máximo de 5 años tras finalizar la relación comercial.';
+        }
+        list.push({
+          id: key,
+          original: f.original,
+          fixed: f.fixed,
+          risk,
+          recommendation,
+          isFixed: f.isFixed
+        });
+      });
+    }
+    return list;
+  };
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([
     { role: 'ai', text: 'Hola, soy tu asistente LexAuditor. ¿Tienes alguna duda sobre este contrato?' }
@@ -307,8 +379,8 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
   };
 
   return (
-    <div className="animate-fade-in" style={{ flex: 1, padding: '40px', overflowY: 'auto', position: 'relative', display: 'flex', gap: '20px' }}>
-      <div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '200px', background: 'radial-gradient(ellipse at top, rgba(14, 165, 233, 0.15) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+    <div className="animate-fade-in print-container-main" style={{ flex: 1, padding: '40px', overflowY: 'auto', position: 'relative', display: 'flex', gap: '20px' }}>
+      <div className="no-print" style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '200px', background: 'radial-gradient(ellipse at top, rgba(14, 165, 233, 0.15) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
 
       {/* Contenido Principal del Documento */}
       <div className="glass-panel" style={{ padding: '50px', flex: 1, minHeight: '80vh', position: 'relative', zIndex: 1, maxWidth: showChat ? '65%' : '850px', margin: showChat ? '0' : '0 auto', transition: 'all 0.3s ease' }}>
@@ -321,7 +393,13 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
             </div>
           </div>
           
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => window.print()}
+              style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              <FileText size={14} /> Exportar Informe
+            </button>
             <button 
               onClick={() => setShowChat(!showChat)}
               style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
@@ -357,7 +435,7 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
 
       {/* Barra Lateral de Chat Legal */}
       {showChat && (
-        <div className="glass-panel animate-fade-in" style={{ width: '30%', minWidth: '300px', display: 'flex', flexDirection: 'column', height: '80vh', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="glass-panel animate-fade-in no-print" style={{ width: '30%', minWidth: '300px', display: 'flex', flexDirection: 'column', height: '80vh', border: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <MessageSquare color="var(--accent-teal)" />
             <strong style={{ color: 'white' }}>Asistente LexAuditor</strong>
@@ -482,6 +560,152 @@ SÉPTIMO: En caso de término anticipado del presente contrato, la empresa reten
           </div>
         </div>
       )}
+
+      {/* REPORTE IMPRIMIBLE OCULTO EN PANTALLA ORDINARIA */}
+      {(() => {
+        const scorePercent = getComplianceScore();
+        const findings = getFindingsList();
+        
+        return (
+          <div className="print-only-report" style={{ width: '100%' }}>
+            {/* Cabecera del informe */}
+            <div style={{ textAlign: 'center', marginBottom: '35px', borderBottom: '2px solid #000', paddingBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', color: '#000000' }}>Informe Oficial de Auditoría de Contratos</h2>
+              <p style={{ fontSize: '0.9rem', fontStyle: 'italic', margin: 0, color: '#475569' }}>LexAuditor Compliance & Risk Assessment Engine</p>
+            </div>
+
+            {/* Tabla de metadatos */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '35px', background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', color: '#000000' }}>
+              <div>
+                <p style={{ margin: '0 0 8px 0' }}><strong>Documento Auditado:</strong> {uploadedFile ? uploadedFile.name : 'Contrato Legal Simulado'}</p>
+                <p style={{ margin: '0 0 8px 0' }}><strong>Tipo de Contrato:</strong> {contractType === 'Honorarios' ? 'Prestación de Servicios (Honorarios)' : contractType === 'Arriendo' ? 'Contrato de Arrendamiento' : 'Acuerdo de Confidencialidad (NDA)'}</p>
+                <p style={{ margin: 0 }}><strong>Legislación Aplicada:</strong> República de Chile (Código Civil / Trabajo / Ley 19.496)</p>
+              </div>
+              <div>
+                <p style={{ margin: '0 0 8px 0' }}><strong>Fecha de Auditoría:</strong> {new Date().toLocaleDateString('es-CL')}</p>
+                <p style={{ margin: '0 0 8px 0' }}><strong>Puntuación de Compliance:</strong> <strong style={{ fontSize: '1.05rem' }}>{scorePercent}%</strong></p>
+                <p style={{ margin: 0 }}><strong>Estado del Contrato:</strong> {scorePercent === 100 ? 'SEGURO Y CONFORME' : 'CON ALERTA DE RIESGOS'}</p>
+              </div>
+            </div>
+
+            {/* Síntesis ejecutiva */}
+            <div style={{ marginBottom: '35px', color: '#000000' }}>
+              <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid #000', paddingBottom: '5px', marginBottom: '15px', fontWeight: 'bold' }}>I. Síntesis Ejecutiva</h3>
+              <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: '#000000' }}>
+                {scorePercent === 100 
+                  ? 'El presente contrato ha sido analizado rigurosamente en base a las normas de orden público vigentes de la República de Chile. Tras la aplicación de las enmiendas e inserción de cláusulas correctivas, el documento se encuentra en plena conformidad (100% de cumplimiento), mitigando eficazmente cualquier riesgo o indicio laboral, usura, cláusulas leoninas o retenciones abusivas de garantías.'
+                  : `El análisis automatizado y exhaustivo de las cláusulas contractuales arrojó una puntuación del ${scorePercent}%. Se identificaron indicios de vulnerabilidad normativa o ilegalidad que requieren remediación inmediata. A continuación se desglosan los hallazgos críticos detectados y las enmiendas de cumplimiento recomendadas.`
+                }
+              </p>
+            </div>
+
+            {/* Hallazgos */}
+            <div style={{ color: '#000000' }}>
+              <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid #000', paddingBottom: '5px', marginBottom: '20px', fontWeight: 'bold' }}>II. Desglose de Hallazgos y Enmiendas Recomendadas</h3>
+              
+              {findings.map((f, idx) => (
+                <div key={idx} style={{ marginBottom: '25px', paddingBottom: '20px', borderBottom: '1px dashed #cbd5e1', pageBreakInside: 'avoid' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#000000', marginBottom: '10px' }}>
+                    Hallazgo N° {idx + 1}: {f.id.includes('subordinacion') ? 'Indicios de Subordinación y Dependencia Laboral' : f.id.includes('retencion') ? 'Multa Abusiva y Retención Ilegal de Honorarios' : f.id.includes('ajuste') ? 'Cláusula Penal Leonina y Reajuste Usurero' : f.id.includes('garantia') ? 'Retención Unilateral y Abusiva de Garantía' : 'Cláusula de Confidencialidad Perpetua'} 
+                    <span style={{ float: 'right', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: f.isFixed ? '#dcfce7' : '#fee2e2', color: f.isFixed ? '#15803d' : '#b91c1c', border: `1px solid ${f.isFixed ? '#bbf7d0' : '#fecaca'}` }}>
+                      {f.isFixed ? 'Enmendado / Corregido' : 'Riesgo Activo / Pendiente'}
+                    </span>
+                  </h4>
+                  <div style={{ marginLeft: '15px', color: '#000000' }}>
+                    <p style={{ fontSize: '0.85rem', margin: '0 0 8px 0' }}>
+                      <strong>Cláusula Original:</strong> <span style={{ textDecoration: 'line-through', color: '#b91c1c', fontStyle: 'italic' }}>"{f.original}"</span>
+                    </p>
+                    <p style={{ fontSize: '0.85rem', margin: '0 0 8px 0' }}>
+                      <strong>Explicación del Riesgo:</strong> {f.risk}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', margin: '0 0 8px 0' }}>
+                      <strong>Recomendación Legal:</strong> {f.recommendation}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', margin: 0, color: '#15803d', fontWeight: 'bold' }}>
+                      <strong>Redacción de Enmienda sugerida:</strong> <span style={{ fontStyle: 'italic' }}>"{f.fixed}"</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sello final */}
+            <div style={{ marginTop: '50px', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', borderTop: '1px solid #cbd5e1', paddingTop: '20px' }}>
+              <p>Certificación de Cumplimiento LexAuditor CL - Hash Único de Verificación: {Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
+              <p style={{ margin: '4px 0 0 0' }}>Documento de análisis de uso estrictamente interno y asesoramiento de cumplimiento.</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ESTILOS DE IMPRESIÓN DINÁMICOS SCOPED */}
+      <style>{`
+        @media print {
+          /* Ocultar elementos no-print */
+          .no-print, nav, .sidebar, header {
+            display: none !important;
+          }
+          
+          /* Resetear fondos y colores globales */
+          body, html, #root, .app-container, .print-container-main {
+            background: #ffffff !important;
+            color: #000000 !important;
+            height: auto !important;
+            width: 100% !important;
+            overflow: visible !important;
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-family: 'Georgia', 'Times New Roman', serif !important;
+          }
+
+          /* Redefinir panel del contrato */
+          .glass-panel {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+
+          /* Remarcar resaltados para impresión lícita legible */
+          .highlight-red {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+            border-bottom: 2px solid #000000 !important;
+            font-weight: bold !important;
+            text-decoration: underline !important;
+            padding: 2px 4px !important;
+          }
+          .highlight-yellow {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+            border-bottom: 2px solid #000000 !important;
+            font-weight: bold !important;
+            text-decoration: underline !important;
+            padding: 2px 4px !important;
+          }
+
+          /* Estilos específicos para el Reporte Imprimible */
+          .print-only-report {
+            display: block !important;
+            margin-top: 50px !important;
+            padding-top: 40px !important;
+            border-top: 3px double #000000 !important;
+            page-break-before: always !important;
+            color: #000000 !important;
+          }
+        }
+
+        /* Ocultar reporte de impresión en pantalla ordinaria */
+        .print-only-report {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };

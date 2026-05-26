@@ -3,6 +3,67 @@ import { AlertTriangle, ShieldAlert, FileEdit, CheckCircle2, Bot, Info } from 'l
 
 const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
   const safeContractData = contractData || {};
+
+  const getComplianceScore = () => {
+    let total = 0;
+    let fixed = 0;
+
+    if (safeContractData.findings && Array.isArray(safeContractData.findings)) {
+      total = safeContractData.findings.length;
+      fixed = safeContractData.findings.filter(f => f.isFixed).length;
+    } else {
+      const keys = Object.keys(safeContractData).filter(key => 
+        safeContractData[key] && typeof safeContractData[key] === 'object' && 'isFixed' in safeContractData[key]
+      );
+      total = keys.length;
+      fixed = keys.filter(key => safeContractData[key].isFixed).length;
+    }
+
+    if (total === 0) {
+      return { 
+        percent: 100, 
+        label: 'Seguro y Conforme', 
+        color: 'var(--success-green)', 
+        description: 'El contrato cumple plenamente con la normativa legal chilena.' 
+      };
+    }
+
+    const percent = Math.round((fixed / total) * 100);
+    
+    if (percent === 100) {
+      return { 
+        percent: 100, 
+        label: 'Seguro y Conforme', 
+        color: 'var(--success-green)', 
+        description: 'Todas las cláusulas riesgosas han sido corregidas con enmiendas lícitas chilenas.' 
+      };
+    }
+
+    if (percent >= 50) {
+      return { 
+        percent, 
+        label: 'Riesgo Parcial', 
+        color: 'var(--accent-teal)', 
+        description: 'Se han corregido algunos riesgos, pero aún quedan cláusulas por subsanar.' 
+      };
+    }
+
+    if (total >= 3) {
+      return { 
+        percent, 
+        label: 'Riesgo Crítico', 
+        color: 'var(--alert-red)', 
+        description: 'Se detectaron múltiples ilegalidades o cláusulas abusivas de alta gravedad.' 
+      };
+    }
+
+    return { 
+      percent, 
+      label: 'Riesgo Moderado', 
+      color: 'var(--alert-yellow)', 
+      description: 'El contrato contiene cláusulas con indicios de subordinación o desproporción.' 
+    };
+  };
   
   const getAlertData = () => {
     if (!activeAlert) return null;
@@ -67,13 +128,73 @@ const CoworkerPanel = ({ activeAlert, onApply, contractData }) => {
   const alertInfo = getAlertData();
 
   return (
-    <div className="animate-fade-in" style={{ width: '420px', backgroundColor: 'var(--bg-secondary)', borderLeft: '1px solid rgba(255,255,255,0.05)', padding: '30px 25px', display: 'flex', flexDirection: 'column', overflowY: 'auto', boxShadow: '-10px 0 30px rgba(0,0,0,0.2)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '30px' }}>
+    <div className="animate-fade-in no-print" style={{ width: '420px', backgroundColor: 'var(--bg-secondary)', borderLeft: '1px solid rgba(255,255,255,0.05)', padding: '30px 25px', display: 'flex', flexDirection: 'column', overflowY: 'auto', boxShadow: '-10px 0 30px rgba(0,0,0,0.2)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
         <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '8px', borderRadius: '8px' }}>
           <Bot size={24} color="var(--accent-teal)" />
         </div>
         <h3 style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>IA Auditoría Multimodal</h3>
       </div>
+
+      {/* Medidor de Cumplimiento (Compliance Score Gauge) */}
+      {(() => {
+        const score = getComplianceScore();
+        const radius = 30;
+        const strokeWidth = 6;
+        const circumference = 2 * Math.PI * radius;
+        const strokeDashoffset = circumference - (score.percent / 100) * circumference;
+
+        return (
+          <div className="glass-panel animate-fade-in" style={{ 
+            padding: '18px', 
+            marginBottom: '30px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '15px', 
+            background: 'rgba(255, 255, 255, 0.01)',
+            borderColor: 'rgba(255, 255, 255, 0.04)',
+            boxShadow: `0 4px 20px -2px rgba(0,0,0,0.2), 0 0 15px -3px ${score.color}15`
+          }}>
+            {/* Círculo SVG */}
+            <div style={{ position: 'relative', width: '72px', height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg style={{ transform: 'rotate(-90deg)', width: '72px', height: '72px' }}>
+                <circle 
+                  cx="36" 
+                  cy="36" 
+                  r={radius} 
+                  fill="transparent" 
+                  stroke="rgba(255, 255, 255, 0.03)" 
+                  strokeWidth={strokeWidth} 
+                />
+                <circle 
+                  cx="36" 
+                  cy="36" 
+                  r={radius} 
+                  fill="transparent" 
+                  stroke={score.color} 
+                  strokeWidth={strokeWidth} 
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.8s ease' }}
+                />
+              </svg>
+              <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'white', lineHeight: 1 }}>{score.percent}%</span>
+              </div>
+            </div>
+
+            {/* Texto Descriptivo */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', color: score.color }}>{score.label}</span>
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: score.color, display: 'inline-block', boxShadow: `0 0 8px ${score.color}` }}></span>
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: '1.3' }}>{score.description}</p>
+            </div>
+          </div>
+        );
+      })()}
 
       {!activeAlert || !alertInfo ? (
         <div className="glass-panel" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.1)', background: 'transparent' }}>

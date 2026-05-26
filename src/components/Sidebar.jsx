@@ -16,7 +16,7 @@ const Sidebar = ({ onNavigate, activeMenu, currentUser, onLogout, hasActiveContr
   );
 
   return (
-    <div style={{ width: '260px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+    <div className="no-print" style={{ width: '260px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
       
       <div style={{ padding: '30px 25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--accent-teal), #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
