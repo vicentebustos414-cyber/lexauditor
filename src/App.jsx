@@ -74,7 +74,7 @@ function App() {
     setAppState('login');
   };
 
-  const startAnalysis = async (file, type) => {
+  const startAnalysis = async (file, type, customSection = null) => {
     setActiveAlert(null);
     setUploadedFile(file);
     setContractType(type);
@@ -103,7 +103,11 @@ function App() {
         id: Date.now(),
         name: file.name,
         date: new Date().toLocaleDateString('es-CL'),
-        section: type === 'Honorarios' ? 'Laboral' : type === 'Arriendo' ? 'Comercial' : 'Confidencialidad',
+        section: type === 'Honorarios' ? 'Laboral' : 
+                 type === 'Arriendo' ? 'Comercial' : 
+                 type === 'NDA' ? 'Confidencialidad' : 
+                 type === 'Penal' ? 'Penal' : 
+                 type === 'General' ? 'General' : 'General',
         status: 'Alerta',
         contractType: type,
         data: data
@@ -118,21 +122,73 @@ function App() {
 
     } catch (err) {
       console.warn('Falló el backend seguro, usando simulación local integrada:', err);
-      // Simular carga de datos específicos según el tipo
-      const mockData = {
-        'Honorarios': {
-          'riesgo-subordinacion': { isFixed: false, original: "estando bajo las órdenes directas del Gerente de Operaciones", fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo" },
-          'ilegal-retencion': { isFixed: false, original: "la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento", fixed: "las partes acuerdan una avaluación anticipada de perjuicios equivalente al 10% de los honorarios, sin perjuicio del pago íntegro de los honorarios ya devengados" }
+      
+      const simulatedText = `[MODO SIN CONEXIÓN - PRE-AUDITORÍA DE SINTAXIS: ${file.name}]\n\nAdvertencia: El servidor seguro de LexAuditor está fuera de línea. Para procesar y extraer dinámicamente todo el texto real de tus archivos PDF mediante IA, asegúrate de iniciar el backend.\n\nSe muestra a continuación una plantilla de auditoría simulada para ${
+        type === 'Honorarios' ? 'Prestación de Servicios (Honorarios)' : 
+        type === 'Arriendo' ? 'Contrato de Arriendo' : 
+        type === 'NDA' ? 'Acuerdo de Confidencialidad (NDA)' :
+        type === 'Penal' ? 'Derecho Penal (Causa / Escrito)' : 'Documento General / Académico'
+      }:\n\n` +
+        (type === 'Honorarios' ? 
+          `TERCERO: El prestador de servicios deberá cumplir con sus labores, estando bajo las órdenes directas del Gerente de Operaciones, debiendo reportar avances según se acuerde.\n\nCUARTO: Los honorarios se pagarán contra entrega de boleta, a los 30 días posteriores al cierre de mes.\n\nSÉPTIMO: En caso de término anticipado del presente contrato, la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento.` :
+         type === 'Arriendo' ?
+          `SEGUNDO (Renta): La renta de arrendamiento será de $500.000 mensuales. La renta se reajustará mensualmente según el IPC más un 5% adicional de interés.\n\nTERCERO (Garantía): Se entrega un mes de garantía. El arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas.` :
+         type === 'NDA' ?
+          `CLÁUSULA QUINTA (Vigencia): La obligación de confidencialidad será perpetua e irrevocable para todos los herederos.` :
+         type === 'Penal' ?
+          `SANTIAGO. Vistos: Se presenta la acusación fiscal en la causa penal de autos. Primero: Consta la participación de los imputados en los hechos punibles investigados de conformidad con el Código Penal de la República de Chile. Segundo: La defensa solicita atenuantes de responsabilidad penal. Se resuelve fijar audiencia de preparación de juicio oral.` :
+          `MINUTA ACADÉMICA / INFORME GENERAL\n\nEste documento contiene apuntes legales y material académico relacionado con la jurisprudencia de los tribunales chilenos. Se estructura para fines educativos y análisis técnico general.`
+        );
+
+      const simulatedFindings = type === 'Honorarios' ? [
+        {
+          id: 'riesgo-subordinacion',
+          isFixed: false,
+          original: "estando bajo las órdenes directas del Gerente de Operaciones",
+          fixed: "coordinando entregables con la empresa, sin sujeción a jornada laboral ni subordinación directa, rigiéndose por el art. 22 inciso 2° del Código del Trabajo",
+          risk: "Las 'órdenes directas' son indicio de subordinación laboral bajo el Art. 7 del Código del Trabajo. Riesgo de demanda por reconocimiento de vínculo laboral.",
+          recommendation: "Reemplazar por coordinación de entregables técnicos sin sujeción a órdenes directas."
         },
-        'Arriendo': {
-          'clausula-ajuste': { isFixed: false, original: "la renta se reajustará mensualmente según el IPC más un 5% adicional de interés", fixed: "la renta se reajustará semestralmente según la variación del IPC informado por el Instituto Nacional de Estadísticas" },
-          'garantia-abusiva': { isFixed: false, original: "el arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas", fixed: "la garantía será devuelta en un plazo de 30 días, descontando solo daños estructurales debidamente acreditados con facturas" }
-        },
-        'NDA': {
-          'plazo-eterno': { isFixed: false, original: "la obligación de confidencialidad será perpetua e irrevocable para todos los herederos", fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial" }
+        {
+          id: 'ilegal-retencion',
+          isFixed: false,
+          original: "la empresa retendrá la totalidad de los honorarios devengados del mes en curso a título de multa a todo evento",
+          fixed: "las partes acuerdan una avaluación anticipada de perjuicios equivalente al 10% de los honorarios, sin perjuicio del pago íntegro de los honorarios ya devengados",
+          risk: "La retención total de honorarios es desproporcionada y constituye un enriquecimiento sin causa según jurisprudencia chilena.",
+          recommendation: "Reemplazar por multa del 10% de honorarios devengados."
         }
+      ] : type === 'Arriendo' ? [
+        {
+          id: 'clausula-ajuste',
+          isFixed: false,
+          original: "la renta se reajustará mensualmente según el IPC más un 5% adicional de interés",
+          fixed: "la renta se reajustará semestralmente según la variación del IPC informado por el Instituto Nacional de Estadísticas",
+          risk: "El ajuste mensual con interés adicional puede considerarse usurario. Se recomienda usar solo IPC semestral.",
+          recommendation: "Ajustar reajuste de renta a variación pura semestral de IPC informada por el INE."
+        },
+        {
+          id: 'garantia-abusiva',
+          isFixed: false,
+          original: "el arrendador podrá retener la garantía por cualquier daño estético menor sin necesidad de rendir cuentas",
+          fixed: "la garantía será devuelta en un plazo de 30 días, descontando solo daños estructurales debidamente acreditados con facturas",
+          risk: "Retener garantía sin rendición de cuentas ni facturas justificadas vulnera el principio de buena fe contractual en arriendos.",
+          recommendation: "Fijar devolución a 30 días y exigir presupuestos y facturas reales de materiales y mano de obra para cualquier descuento."
+        }
+      ] : type === 'NDA' ? [
+        {
+          id: 'plazo-eterno',
+          isFixed: false,
+          original: "la obligación de confidencialidad será perpetua e irrevocable para todos los herederos",
+          fixed: "la obligación de confidencialidad tendrá una duración de 5 años contados desde el término de la relación comercial",
+          risk: "Las obligaciones perpetuas de confidencialidad son contrarias al orden público. Debe acotarse a un plazo máximo razonable.",
+          recommendation: "Limitar vigencia a un máximo de 5 años tras finalizar la relación comercial."
+        }
+      ] : [];
+
+      const finalData = {
+        text: simulatedText,
+        findings: simulatedFindings
       };
-      const finalData = mockData[type] || mockData['Honorarios'];
       setContractData(finalData);
 
       // Guardar incluso en modo de simulación
@@ -140,7 +196,11 @@ function App() {
         id: Date.now(),
         name: file.name,
         date: new Date().toLocaleDateString('es-CL'),
-        section: type === 'Honorarios' ? 'Laboral' : type === 'Arriendo' ? 'Comercial' : 'Confidencialidad',
+        section: type === 'Honorarios' ? 'Laboral' : 
+                 type === 'Arriendo' ? 'Comercial' : 
+                 type === 'NDA' ? 'Confidencialidad' : 
+                 type === 'Penal' ? 'Penal' : 
+                 type === 'General' ? 'General' : 'General',
         status: 'Alerta',
         contractType: type,
         data: finalData

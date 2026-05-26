@@ -309,6 +309,7 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDocName, setNewDocName] = useState('');
   const [newSectionName, setNewSectionName] = useState('Laboral');
+  const [customSection, setCustomSection] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   
   const [isSearching, setIsSearching] = useState(false);
@@ -338,25 +339,40 @@ const MockViews = ({ currentView, savedContracts, onDeleteContract, onAddContrac
     e.preventDefault();
     if (!newDocName || !newSectionName) return;
     
-    // Si no hay archivo real seleccionado, agregamos uno de simulación
-    let contractType = 'Honorarios';
-    if (newSectionName === 'Comercial') contractType = 'Arriendo';
-    else if (newSectionName === 'Confidencialidad') contractType = 'NDA';
+    // Obtener el nombre del área jurídica final (ya sea predefinido o escrito)
+    const finalSection = newSectionName === 'Otro' ? (customSection.trim() || 'Otro') : newSectionName;
+    
+    // Determinar de manera inteligente el tipo de auditoría en base al área jurídica
+    let contractType = 'General';
+    const lowerSection = finalSection.toLowerCase();
+    
+    if (lowerSection.includes('laboral') || lowerSection.includes('trabajo') || lowerSection.includes('servicio') || lowerSection.includes('honorario')) {
+      contractType = 'Honorarios';
+    } else if (lowerSection.includes('arriendo') || lowerSection.includes('arrendamiento') || lowerSection.includes('alquiler')) {
+      contractType = 'Arriendo';
+    } else if (lowerSection.includes('nda') || lowerSection.includes('confidencialidad') || lowerSection.includes('reserva') || lowerSection.includes('secreto')) {
+      contractType = 'NDA';
+    } else if (lowerSection.includes('penal') || lowerSection.includes('delito') || lowerSection.includes('criminal')) {
+      contractType = 'Penal';
+    } else if (lowerSection.includes('civil') || lowerSection.includes('contrato') || lowerSection.includes('familia') || lowerSection.includes('procesal')) {
+      contractType = 'Arriendo'; // Reglas generales/civiles asociables al analizador civil
+    }
 
     if (selectedFile) {
       if (onUploadContract) {
-        onUploadContract(selectedFile, contractType);
+        onUploadContract(selectedFile, contractType, finalSection);
       }
     } else {
       // Mock fallback
       onAddContract({ 
         name: newDocName.includes('.') ? newDocName : `${newDocName}.pdf`, 
         date: new Date().toLocaleDateString('es-CL'), 
-        section: newSectionName, 
+        section: finalSection, 
         contractType: contractType,
         status: 'Alerta' 
       });
       setNewDocName(''); 
+      setCustomSection('');
       setShowAddForm(false);
     }
   };
@@ -803,10 +819,34 @@ Se acoge la excepción de reducción de cláusula penal por lesión enorme. Se r
                       onChange={(e) => setNewSectionName(e.target.value)} 
                       style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer', outline: 'none' }}
                     >
-                      <option value="Laboral">Prestación de Servicios (Honorarios)</option>
-                      <option value="Comercial">Contrato de Arriendo</option>
-                      <option value="Confidencialidad">Acuerdo de Confidencialidad (NDA)</option>
+                      <option value="Laboral">Derecho Laboral</option>
+                      <option value="Civil">Derecho Civil</option>
+                      <option value="Comercial">Derecho Comercial</option>
+                      <option value="Confidencialidad">Derecho de Confidencialidad (NDA)</option>
+                      <option value="Penal">Derecho Penal</option>
+                      <option value="Constitucional">Derecho Constitucional</option>
+                      <option value="Administrativo">Derecho Administrativo</option>
+                      <option value="Tributario">Derecho Tributario</option>
+                      <option value="Familia">Derecho de Familia</option>
+                      <option value="Procesal">Derecho Procesal</option>
+                      <option value="Ambiental">Derecho Ambiental</option>
+                      <option value="Internacional">Derecho Internacional</option>
+                      <option value="Económico">Derecho Económico</option>
+                      <option value="General/Académico">General / Académico</option>
+                      <option value="Otro">Otro (Escribir área personalizada...)</option>
                     </select>
+                    {newSectionName === 'Otro' && (
+                      <div style={{ marginTop: '10px' }}>
+                        <input 
+                          value={customSection} 
+                          onChange={(e) => setCustomSection(e.target.value)} 
+                          type="text" 
+                          placeholder="Ej: Derecho de Minería, Derecho de Aguas..." 
+                          style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'white', outline: 'none' }} 
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex: 1, minWidth: '220px' }}>
                     <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Nombre de Documento</label>
